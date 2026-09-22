@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>에너지와 신호 인터랙티브 랩 | 재생에너지 발전과 스마트 전력망</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cyan: '#06b6d4',
+              blue: '#3b82f6',
+              neon: '#10b981',
+              amber: '#f59e0b',
+              purple: '#8b5cf6',
+              dark: '#0b1120',
+              card: '#131e36',
+              border: '#1e293b'
+            }
+          },
+          animation: {
+            'spin-slow': 'spin 8s linear infinite',
+            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+    * {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      user-select: none;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b1120;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .glow-cyan {
+      box-shadow: 0 0 20px -3px rgba(6, 182, 212, 0.4);
+    }
+    .glow-amber {
+      box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.4);
+    }
+    .glow-neon {
+      box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.4);
+    }
+    .canvas-container {
+      position: relative;
+      background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+    }
+  </style>
+</head>
+<body class="bg-[#090d16] text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-[#0c1322]/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-bolt-lightning text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/60">CLASS RE:BOOT</span>
+            <span class="text-xs text-slate-400 font-medium">고등학교 교과융합 탐구</span>
+          </div>
+          <h1 class="text-base lg:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            전기전자 : 신호가 세상을 연결한다
+            <span class="text-xs font-normal text-slate-400 hidden sm:inline">| 재생에너지 시뮬레이터</span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1.5 p-1 bg-slate-900/90 rounded-xl border border-slate-800/80 text-xs sm:text-sm font-medium">
+        <button onclick="switchTab('sim')" id="tab-btn-sim" class="tab-btn active px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 bg-cyan-500 text-white shadow-md shadow-cyan-500/20 font-semibold">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>발전 시뮬레이터</span>
+        </button>
+        <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-puzzle-piece"></i>
+          <span>에너지 변환 조립 챌린지</span>
+        </button>
+        <button onclick="switchTab('grid')" id="tab-btn-grid" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>19:00 전력 피크 위기</span>
+        </button>
+        <button onclick="switchTab('table')" id="tab-btn-table" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-table-list"></i>
+          <span>비교 정리 및 성찰</span>
+        </button>
+      </nav>
+
+      <!-- Audio / Help Tools -->
+      <div class="hidden sm:flex items-center gap-2">
+        <button onclick="toggleAudioFx()" id="audio-toggle" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 border border-slate-700 transition flex items-center gap-1.5" title="효과음 토글">
+          <i class="fa-solid fa-volume-high text-cyan-400" id="audio-icon"></i>
+          <span>효과음 ON</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: 발전 시뮬레이터 (풍력, 수력, 태양광, 화력 비교) -->
+    <!-- ========================================================================= -->
+    <section id="section-sim" class="space-y-6">
+      <!-- Top Overview Banner -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-800 rounded-2xl p-5 lg:p-6 relative overflow-hidden shadow-xl">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="space-y-1.5 max-w-3xl">
+            <div class="inline-flex items-center gap-2 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
+              <i class="fa-solid fa-arrows-spin"></i> 핵심 원리 : 에너지 보존과 형태 변환
+            </div>
+            <h2 class="text-xl lg:text-2xl font-bold text-white tracking-tight">
+              자연의 힘을 전기(신호)로 바꾸는 4가지 발전 방식
+            </h2>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              풍력과 수력은 <strong>회전 운동에너지</strong>를 통해 <strong>전자기 유도</strong>를 일으키고, 태양광은 회전 없이 <strong>광전효과</strong>로 전자를 직접 이동시킵니다. 슬라이더를 조절하여 발전 과정을 관찰해보세요.
+            </p>
+          </div>
+          <!-- Mode Select Buttons -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800 shrink-0">
+            <button onclick="selectSimMode('wind')" id="sim-btn-wind" class="sim-mode-btn active px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-cyan-500 text-white shadow-md shadow-cyan-500/20">
+              <i class="fa-solid fa-wind text-sm"></i> 풍력 발전
+            </button>
+            <button onclick="selectSimMode('hydro')" id="sim-btn-hydro" class="sim-mode-btn px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-water text-sm"></i> 수력 발전
+            </button>
+            <button onclick="selectSimMode('solar')" id="sim-btn-solar" class="sim-mode-btn px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-sun text-sm"></i> 태양광 발전
+            </button>
+            <button onclick="selectSimMode('thermal')" id="sim-btn-thermal" class="sim-mode-btn px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-fire-flame-curved text-sm"></i> 화력 (비교)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Visualizer & Controller Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Canvas Visualizer Card (7 cols) -->
+        <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col space-y-3 shadow-lg">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-xs">
+            <div class="flex items-center gap-2 text-cyan-400 font-semibold">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+              <span id="canvas-status-title">풍력 발전 실시간 물리 시각화</span>
+            </div>
+            <div class="text-slate-400 flex items-center gap-3">
+              <span id="canvas-fps">60 FPS</span>
+              <span class="text-slate-600">|</span>
+              <span class="text-emerald-400 font-mono font-bold" id="telemetry-power-badge">발전 출력: 0 kW</span>
+            </div>
+          </div>
+
+          <!-- Simulation Canvas with Aspect Ratio Container -->
+          <div class="w-full h-72 sm:h-96 rounded-xl overflow-hidden canvas-container border border-slate-800/80 relative">
+            <canvas id="simCanvas" class="w-full h-full block"></canvas>
+
+            <!-- Dynamic Floating Overlay Badge -->
+            <div class="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs font-mono text-slate-300 pointer-events-none flex items-center gap-2">
+              <span class="text-cyan-400 font-bold" id="overlay-principle-badge">전자기 유도 (Faraday Law)</span>
+              <span class="text-slate-500">•</span>
+              <span id="overlay-dynamic-hint">바람 세기를 올려 전기를 생산하세요</span>
+            </div>
+          </div>
+
+          <!-- Bottom Step Pipeline Indicator -->
+          <div id="diagram-step-boxes" class="grid grid-cols-4 gap-2 pt-2 text-center text-xs">
+            <!-- Injected dynamically by JS -->
+          </div>
+        </div>
+
+        <!-- Controls & Measurement Panel (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col space-y-4">
+          <!-- Parameter Controller Box -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-lg">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                  <i class="fa-solid fa-sliders text-cyan-400"></i> 환경 매개변수 제어
+                </h3>
+                <span class="text-[11px] text-slate-400">슬라이더를 조작하거나 아래 프리셋을 눌러보세요</span>
+              </div>
+              <button onclick="resetSimParams()" class="text-xs text-slate-400 hover:text-cyan-400 flex items-center gap-1 transition">
+                <i class="fa-solid fa-rotate-left"></i> 기본값
+              </button>
+            </div>
+
+            <!-- Quick Environment Presets for Students -->
+            <div class="space-y-1.5">
+              <span class="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> 탐구 상황 빠른 프리셋:
+              </span>
+              <div id="sim-presets-container" class="grid grid-cols-3 gap-1.5">
+                <!-- Dynamically populated by JS based on simMode -->
+              </div>
+            </div>
+
+            <!-- Dynamic Slider 1 -->
+            <div class="space-y-1.5 pt-1">
+              <div class="flex justify-between items-center text-xs">
+                <label id="slider1-label" for="paramSlider1" class="text-slate-300 font-medium">바람의 세기 (풍속)</label>
+                <span id="slider1-val" class="font-mono font-bold text-cyan-400">12.0 m/s</span>
+              </div>
+              <input type="range" id="paramSlider1" min="0" max="30" step="0.5" value="12" class="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-800 rounded-lg">
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span id="slider1-min">0 m/s</span>
+                <span id="slider1-mid">15 m/s</span>
+                <span id="slider1-max">30 m/s (돌풍)</span>
+              </div>
+            </div>
+
+            <!-- Physics Quick Stats Grid -->
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+              <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 block" id="stat1-name">회전 속도 (RPM)</span>
+                <span class="text-base font-bold font-mono text-cyan-300" id="stat1-val">24.5 rpm</span>
+              </div>
+              <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 block" id="stat2-name">전자기 유도 기전력</span>
+                <span class="text-base font-bold font-mono text-emerald-400" id="stat2-val">380 V</span>
+              </div>
+              <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 block" id="stat3-name">에너지 변환 효율</span>
+                <span class="text-base font-bold font-mono text-amber-300" id="stat3-val">42.8 %</span>
+              </div>
+              <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                <span class="text-[11px] text-slate-400 block" id="stat4-name">탄소 배출량 (CO₂)</span>
+                <span class="text-base font-bold font-mono text-slate-300" id="stat4-val">0.0 g/kWh</span>
+              </div>
+            </div>
+          </div>
+          <!-- Scientific Principle Explanation Box -->
+          <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/30 border border-slate-800 rounded-2xl p-5 space-y-2.5 shadow-lg flex-1">
+            <div class="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase">
+              <i class="fa-solid fa-graduation-cap"></i> 교과 연계 핵심 과학 원리
+            </div>
+            <h4 class="font-bold text-white text-sm" id="science-principle-title">
+              패러데이 전자기 유도 (Faraday's Induction)
+            </h4>
+            <p class="text-xs text-slate-300 leading-relaxed" id="science-principle-desc">
+              바람의 운동에너지가 날개를 회전시키면, 발전기 내부의 자석 또는 코일이 회전하면서 <strong>자기장의 변화(ΔΦ/Δt)</strong>를 만듭니다. 이 자속의 시간당 변화율에 비례하여 유도 기전력(전압)이 발생하고 전류가 유도됩니다.
+            </p>
+            <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+              <span id="science-equation">유도기전력 \( V = -N \frac{\Delta \Phi}{\Delta t} \)</span>
+              <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 font-mono font-medium" id="science-badge">물리학 I & 통합과학</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: 에너지 변환 단계 조립 챌린지 (Drag & Drop / Match) -->
+    <!-- ========================================================================= -->
+    <section id="section-quiz" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <div class="text-xs font-semibold text-cyan-400 flex items-center gap-1.5 uppercase">
+              <i class="fa-solid fa-puzzle-piece"></i> 학생 주도적 탐구 활동
+            </div>
+            <h2 class="text-xl font-bold text-white tracking-tight mt-1">
+              에너지 변환 파이프라인 조립 챌린지
+            </h2>
+            <p class="text-xs text-slate-300 mt-1">
+              각 발전 방식의 4단계 <strong>[초기 자연 에너지] ➔ [중간 변환 과정] ➔ [핵심 부품 및 장치] ➔ [최종 형태]</strong>를 올바른 순서로 연결하세요.
+            </p>
+          </div>
+          <!-- Generation Target Selector -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400">대상 발전:</span>
+            <select id="challenge-type-select" onchange="loadChallenge(this.value)" class="bg-slate-950 border border-slate-700 text-white text-xs font-semibold rounded-lg px-3 py-2 outline-none focus:border-cyan-400">
+              <option value="wind">풍력 발전 (Wind Power)</option>
+              <option value="hydro">수력 발전 (Hydroelectric)</option>
+              <option value="solar">태양광 발전 (Solar Photovoltaic)</option>
+              <option value="thermal">화력 발전 (Thermal Power)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Interactive Drag / Click Drop Zone Grid -->
+        <div class="pt-6 space-y-6">
+          <!-- Step Slots (Target Zones) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Slot 1 -->
+            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-4 min-h-[140px] flex flex-col justify-between transition-all" id="slot-0" ondragover="allowDrop(event)" ondrop="handleDrop(event, 0)">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-800 pb-2">
+                <span>1단계 : 초기 자연 에너지</span>
+                <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px]">1</span>
+              </div>
+              <div class="slot-content py-3 text-center text-slate-500 text-xs italic">
+                아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요
+              </div>
+              <div class="slot-footer text-right text-[11px] font-mono text-cyan-400 hidden"></div>
+            </div>
+
+            <!-- Slot 2 -->
+            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-4 min-h-[140px] flex flex-col justify-between transition-all" id="slot-1" ondragover="allowDrop(event)" ondrop="handleDrop(event, 1)">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-800 pb-2">
+                <span>2단계 : 중간 변환 과정</span>
+                <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px]">2</span>
+              </div>
+              <div class="slot-content py-3 text-center text-slate-500 text-xs italic">
+                아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요
+              </div>
+              <div class="slot-footer text-right text-[11px] font-mono text-cyan-400 hidden"></div>
+            </div>
+
+            <!-- Slot 3 -->
+            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-4 min-h-[140px] flex flex-col justify-between transition-all" id="slot-2" ondragover="allowDrop(event)" ondrop="handleDrop(event, 2)">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-800 pb-2">
+                <span>3단계 : 핵심 부품 및 장치</span>
+                <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px]">3</span>
+              </div>
+              <div class="slot-content py-3 text-center text-slate-500 text-xs italic">
+                아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요
+              </div>
+              <div class="slot-footer text-right text-[11px] font-mono text-cyan-400 hidden"></div>
+            </div>
+
+            <!-- Slot 4 -->
+            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-4 min-h-[140px] flex flex-col justify-between transition-all" id="slot-3" ondragover="allowDrop(event)" ondrop="handleDrop(event, 3)">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-800 pb-2">
+                <span>4단계 : 최종 형태</span>
+                <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px]">4</span>
+              </div>
+              <div class="slot-content py-3 text-center text-slate-500 text-xs italic">
+                아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요
+              </div>
+              <div class="slot-footer text-right text-[11px] font-mono text-cyan-400 hidden"></div>
+            </div>
+          </div>
+
+          <!-- Card Pool (Choices) -->
+          <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">
+                <i class="fa-solid fa-hand-pointer text-cyan-400 mr-1.5"></i> 선택 가능한 블록 카드 (클릭하여 빈 슬롯에 채우기)
+              </span>
+              <button onclick="resetCurrentChallenge()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition">
+                <i class="fa-solid fa-arrow-rotate-right"></i> 다시 배치하기
+              </button>
+            </div>
+            <div id="card-pool" class="flex flex-wrap gap-2.5">
+              <!-- Cards dynamically inserted by JS -->
+            </div>
+          </div>
+
+          <!-- Challenge Control Action Bar (Always Visible) -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-slate-950/70 rounded-xl border border-slate-800">
+            <div class="text-xs text-slate-400 flex items-center gap-2">
+              <i class="fa-solid fa-circle-info text-cyan-400"></i>
+              <span>1~4단계를 모두 올바르게 조립하면 <strong>완성 축하 팝업</strong>이 즉시 나타납니다.</span>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <button onclick="resetCurrentChallenge()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-left"></i> <span>초기화</span>
+              </button>
+              <button onclick="checkChallengeAnswer()" id="quiz-check-btn" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white shadow-md shadow-cyan-500/20 transition flex items-center gap-2">
+                <i class="fa-solid fa-circle-check"></i> <span>정답 검증하기</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Result & Feedback Banner -->
+          <div id="quiz-result-banner" class="hidden p-4 rounded-xl border text-sm transition-all flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div id="quiz-result-icon" class="text-xl"></div>
+              <div>
+                <h4 id="quiz-result-title" class="font-bold"></h4>
+                <p id="quiz-result-desc" class="text-xs opacity-90"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: 19:00 전력 피크 위기 해결 챌린지 (Smart Grid Crisis) -->
+    <!-- ========================================================================= -->
+    <section id="section-grid" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl relative overflow-hidden">
+        <!-- Emergency alert banner -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-full bg-rose-950 text-rose-400 border border-rose-800/80 text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 19:07 비상 경보 발령
+              </span>
+              <span class="text-xs text-slate-400">도시 전력망 관제 시뮬레이션</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-white tracking-tight mt-1">
+              "태양은 지고 바람은 멈췄는데, 도시는 전기를 원한다"
+            </h2>
+            <p class="text-xs text-slate-300 mt-1 max-w-2xl">
+              폭염으로 인한 냉방 급증과 전기차 충전이 겹쳤습니다. 재생에너지 공급이 줄어든 순간, 
+              <strong>예비전력이 30% 급감</strong>했습니다. 90초 안에 우선 송전 구역을 결정하세요.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <span class="text-[11px] text-slate-400 block font-mono">결정 제한시간</span>
+              <span id="grid-timer" class="text-2xl font-black font-mono text-rose-400">90.0초</span>
+            </div>
+            <button onclick="startGridEmergency()" id="grid-start-btn" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-play"></i> <span>시뮬레이션 시작</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid Status Gauge Bars -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800">
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="text-slate-400">도시 총 전력 수요</span>
+              <span class="font-mono font-bold text-amber-400" id="grid-demand-val">100 % (과부하)</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="grid-demand-bar" class="h-full bg-amber-400 transition-all duration-300" style="width: 100%;"></div>
+            </div>
+            <span class="text-[10px] text-slate-500 mt-1 block">기온 38.7℃ | 에어컨 +11%</span>
+          </div>
+
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800">
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="text-slate-400">가용 공급 전력 (재생+예비)</span>
+              <span class="font-mono font-bold text-rose-400" id="grid-supply-val">70 % (부족)</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="grid-supply-bar" class="h-full bg-rose-500 transition-all duration-300" style="width: 70%;"></div>
+            </div>
+            <span class="text-[10px] text-slate-500 mt-1 block">일몰 후 태양광 제로 / 풍속 1.2m/s</span>
+          </div>
+
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800">
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="text-slate-400">현재 할당된 전력</span>
+              <span class="font-mono font-bold text-cyan-400" id="grid-allocated-val">0 % / 70%</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="grid-allocated-bar" class="h-full bg-cyan-400 transition-all duration-300" style="width: 0%;"></div>
+            </div>
+            <span class="text-[10px] text-slate-500 mt-1 block">최대 70%까지 우선 배분 가능</span>
+          </div>
+        </div>
+
+        <!-- 4 Critical Sectors Dispatch Controller -->
+        <div class="pt-4 space-y-3">
+          <h3 class="text-xs font-bold text-slate-300 flex items-center justify-between">
+            <span><i class="fa-solid fa-network-wired text-cyan-400 mr-1.5"></i> 4대 필수 도시 구역 송전 여부 선택</span>
+            <span class="text-slate-400 font-normal">각 구역의 요구 전력과 단절 리스크를 고려하여 스위치를 켜세요</span>
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Sector 1: Hospital -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sm text-white flex items-center gap-1.5">
+                    <i class="fa-solid fa-hospital text-rose-400"></i> 종합병원
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-rose-950 text-rose-300 border border-rose-800">18% 요구</span>
+                </div>
+                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                  수술실 및 중환자실 인공호흡기 가동 중. 정전 10초 시 생명 위험.
+                </p>
+                <div class="mt-2 text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">
+                  <i class="fa-solid fa-info-circle text-cyan-400"></i> 비상 발전기 40분 가동 가능
+                </div>
+              </div>
+              <button onclick="toggleSector(0)" id="sector-btn-0" class="w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition">
+                <i class="fa-solid fa-power-off mr-1"></i> <span>송전 OFF</span>
+              </button>
+            </div>
+
+            <!-- Sector 2: Data Center -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sm text-white flex items-center gap-1.5">
+                    <i class="fa-solid fa-server text-blue-400"></i> 데이터센터
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-blue-950 text-blue-300 border border-blue-800">22% 요구</span>
+                </div>
+                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                  국가 금융 결제망 및 전국 스마트폰 119 긴급 신고 통신망 연결.
+                </p>
+                <div class="mt-2 text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">
+                  <i class="fa-solid fa-info-circle text-cyan-400"></i> 통신 두절 시 도시 패닉 우려
+                </div>
+              </div>
+              <button onclick="toggleSector(1)" id="sector-btn-1" class="w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition">
+                <i class="fa-solid fa-power-off mr-1"></i> <span>송전 OFF</span>
+              </button>
+            </div>
+
+            <!-- Sector 3: School / Shelter -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sm text-white flex items-center gap-1.5">
+                    <i class="fa-solid fa-school text-amber-400"></i> 학교 및 대피소
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-amber-950 text-amber-300 border border-amber-800">12% 요구</span>
+                </div>
+                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                  야간 자율학습 학생 및 폭염 취약 노약자 1,200명 임시 대피 중.
+                </p>
+                <div class="mt-2 text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">
+                  <i class="fa-solid fa-info-circle text-cyan-400"></i> 체육관 에어컨 및 조명 필요
+                </div>
+              </div>
+              <button onclick="toggleSector(2)" id="sector-btn-2" class="w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition">
+                <i class="fa-solid fa-power-off mr-1"></i> <span>송전 OFF</span>
+              </button>
+            </div>
+
+            <!-- Sector 4: Industrial Plant -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sm text-white flex items-center gap-1.5">
+                    <i class="fa-solid fa-industry text-purple-400"></i> 반도체 공장
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-950 text-purple-300 border border-purple-800">28% 요구</span>
+                </div>
+                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                  용광로 및 클린룸 정지 시 재가동에 36시간 소요, 수천억 원 피해.
+                </p>
+                <div class="mt-2 text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">
+                  <i class="fa-solid fa-info-circle text-cyan-400"></i> 막대한 경제적 손실 위험
+                </div>
+              </div>
+              <button onclick="toggleSector(3)" id="sector-btn-3" class="w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition">
+                <i class="fa-solid fa-power-off mr-1"></i> <span>송전 OFF</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Evaluation Button & Debriefing Modal Container -->
+          <div class="flex justify-end pt-3">
+            <button onclick="submitGridDecision()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-bold text-xs text-white shadow-lg shadow-cyan-500/20 transition flex items-center gap-2">
+              <i class="fa-solid fa-gavel"></i> <span>최종 관제 결정 제출 및 평가</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: 비교 정리표 및 학생 성찰 리포트 (Review & Record) -->
+    <!-- ========================================================================= -->
+    <section id="section-table" class="hidden space-y-6">
+      <!-- Comparative Table Card -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div>
+            <span class="text-xs font-semibold text-cyan-400 flex items-center gap-1.5 uppercase">
+              <i class="fa-solid fa-table-list"></i> 개념 종합 및 비교
+            </span>
+            <h2 class="text-lg font-bold text-white mt-1">
+              에너지 변환 단계 비교 정리표
+            </h2>
+          </div>
+          <button onclick="copyTableText()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 transition flex items-center gap-1.5 self-start sm:self-auto">
+            <i class="fa-regular fa-copy text-cyan-400"></i> 정리표 텍스트 복사
+          </button>
+        </div>
+
+        <!-- Responsive Table Container -->
+        <div class="overflow-x-auto rounded-xl border border-slate-800">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                <th class="p-3 font-semibold">발전 구분</th>
+                <th class="p-3 font-semibold">초기 자연 에너지</th>
+                <th class="p-3 font-semibold">중간 변환 과정</th>
+                <th class="p-3 font-semibold">핵심 부품 및 장치</th>
+                <th class="p-3 font-semibold">최종 형태</th>
+                <th class="p-3 font-semibold">핵심 원리 및 특징</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 text-slate-300">
+              <tr class="hover:bg-slate-800/40 transition">
+                <td class="p-3 font-bold text-cyan-400 flex items-center gap-2">
+                  <i class="fa-solid fa-wind"></i> 풍력 발전
+                </td>
+                <td class="p-3">바람 (운동에너지)</td>
+                <td class="p-3">날개 블레이드 회전</td>
+                <td class="p-3 font-mono text-slate-200">풍력 터빈 & 발전기</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold">전기</span></td>
+                <td class="p-3 text-slate-400">바람의 세기 변화에 따라 <strong>전자기 유도</strong>로 전력 생산</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40 transition">
+                <td class="p-3 font-bold text-blue-400 flex items-center gap-2">
+                  <i class="fa-solid fa-water"></i> 수력 발전
+                </td>
+                <td class="p-3">물 (위치·운동에너지)</td>
+                <td class="p-3">수차 회전운동</td>
+                <td class="p-3 font-mono text-slate-200">수차 & 발전기</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold">전기</span></td>
+                <td class="p-3 text-slate-400">낙차를 이용해 고속 회전시켜 <strong>유도 기전력</strong> 발생</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40 transition">
+                <td class="p-3 font-bold text-amber-400 flex items-center gap-2">
+                  <i class="fa-solid fa-sun"></i> 태양광 발전
+                </td>
+                <td class="p-3">빛 (광에너지)</td>
+                <td class="p-3">광전효과 (전자 이동)</td>
+                <td class="p-3 font-mono text-slate-200">태양전지 (반도체 패널)</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold">전기</span></td>
+                <td class="p-3 text-slate-400"><strong class="text-amber-300">회전 장치 없이</strong> 반도체 내부 전하 분리로 직류 발생</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40 transition bg-slate-950/40">
+                <td class="p-3 font-bold text-rose-400 flex items-center gap-2">
+                  <i class="fa-solid fa-fire-flame-curved"></i> (비교) 화력 발전
+                </td>
+                <td class="p-3">연료 (화학에너지)</td>
+                <td class="p-3">연소 열 ➔ 증기 회전</td>
+                <td class="p-3 font-mono text-slate-200">증기 터빈 & 발전기</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold">전기</span></td>
+                <td class="p-3 text-slate-400">온실가스(CO₂) 배출 수반, 인간 스케줄에 맞춘 가동 가능</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Student Activity & School Record (세특) Generator Card -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+              <i class="fa-solid fa-pen-nib mr-1"></i> 학생 성찰 및 학생부(세특) 연계
+            </span>
+            <h3 class="text-base font-bold text-white mt-0.5">
+              생각의 변화가 보이는 3단계 탐구 성찰 노트
+            </h3>
+          </div>
+          <span class="text-xs text-slate-400 hidden sm:inline">작성 완료 후 클립보드에 바로 복사할 수 있습니다</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Step 1 -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 flex items-center justify-center text-[10px]">1</span>
+              <span>처음 생각 (수업 전)</span>
+            </label>
+            <textarea id="record-step1" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:border-cyan-400 outline-none resize-none" placeholder="예: 전기는 단순히 콘센트에서 흘러나오는 에너지고, 친환경 발전이 무조건 해결책이라고 생각했다."></textarea>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-blue-950 text-blue-400 border border-blue-800 flex items-center justify-center text-[10px]">2</span>
+              <span>결정적 근거 (활동 중 경험)</span>
+            </label>
+            <textarea id="record-step2" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:border-blue-400 outline-none resize-none" placeholder="예: 발전 방식에 따라 터빈 회전 유무(전자기유도 vs 광전효과)가 다르며, 19시 피크 시뮬레이션에서 간헐성 제어가 전력망의 핵심임을 체험했다."></textarea>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center justify-center text-[10px]">3</span>
+              <span>지금의 통찰 (새로운 시선)</span>
+            </label>
+            <textarea id="record-step3" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:border-emerald-400 outline-none resize-none" placeholder="예: 발전은 양(얼마나 만드나)이 아니라 실시간 신호와 피드백 제어로 필요한 순간을 맞추는 시스템 엔지니어링임을 깨달았다."></textarea>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <div class="text-[11px] text-slate-400 flex items-center gap-2">
+            <i class="fa-solid fa-lightbulb text-amber-400"></i>
+            <span>3단계를 통합하여 입학사정관 및 세특 제출용 300자 문장으로 생성합니다.</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="autoFillRecordExample()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition">
+              예시 불러오기
+            </button>
+            <button onclick="generateSeteukText()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> <span>세특 300자 생성</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Generated Result Display -->
+        <div id="seteuk-output-box" class="hidden mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-emerald-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-file-lines"></i> 생성된 학생부 세특 기록 문안
+            </span>
+            <button onclick="copyGeneratedSeteuk()" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
+              <i class="fa-regular fa-copy"></i> 복사하기
+            </button>
+          </div>
+          <p id="seteuk-output-text" class="text-xs text-slate-200 leading-relaxed font-normal"></p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Custom Modal Box (Non-alert) -->
+  <div id="custom-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
+      <div class="flex items-center gap-3">
+        <div id="modal-icon-container" class="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 text-lg">
+          <i class="fa-solid fa-circle-info" id="modal-icon"></i>
+        </div>
+        <div>
+          <h3 id="modal-title" class="font-bold text-white text-base">알림</h3>
+          <span id="modal-subtitle" class="text-xs text-slate-400">클래스리부트 탐구 활동</span>
+        </div>
+      </div>
+      <div id="modal-body" class="text-xs text-slate-300 leading-relaxed space-y-2"></div>
+      <div class="flex justify-end pt-2">
+        <button onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 font-bold text-white text-xs transition">
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       1. Global State & Audio Engine (Web Audio API)
+       ========================================================================= */
+    const state = {
+      currentTab: 'sim',
+      simMode: 'wind', // 'wind', 'hydro', 'solar', 'thermal'
+      audioEnabled: true,
+      params: {
+        wind: { speed: 12 },
+        hydro: { head: 45 },
+        solar: { irradiance: 75 },
+        thermal: { fuelRate: 50 }
+      },
+      gridGame: {
+        running: false,
+        timer: 90.0,
+        timerInterval: null,
+        allocated: 0,
+        sectors: [
+          { name: '종합병원', req: 18, on: false, priority: 1 },
+          { name: '데이터센터', req: 22, on: false, priority: 2 },
+          { name: '학교/대피소', req: 12, on: false, priority: 3 },
+          { name: '반도체 공장', req: 28, on: false, priority: 4 }
+        ]
+      }
+    };
+
+    // Mode Parameter key mapping (단일 핵심 변인으로 간소화)
+    const modeParamKeys = {
+      wind: 'speed',
+      hydro: 'head',
+      solar: 'irradiance',
+      thermal: 'fuelRate'
+    };
+
+    function getParam(mode) {
+      const key = modeParamKeys[mode];
+      return state.params[mode][key];
+    }
+
+    function setParam(mode, val) {
+      const key = modeParamKeys[mode];
+      state.params[mode][key] = val;
+    }
+
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.15, vol = 0.05) {
+      if (!state.audioEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(vol, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {
+        // silent fail
+      }
+    }
+
+    function toggleAudioFx() {
+      state.audioEnabled = !state.audioEnabled;
+      const icon = document.getElementById('audio-icon');
+      const text = document.querySelector('#audio-toggle span');
+      if (state.audioEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-cyan-400';
+        text.innerText = '효과음 ON';
+        playTone(587.33, 'triangle', 0.2);
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+        text.innerText = '효과음 OFF';
+      }
+    }
+
+    /* =========================================================================
+       2. Modal Helper (Replacing alert)
+       ========================================================================= */
+    function showModal(title, subtitle, htmlBody, iconClass = 'fa-solid fa-circle-info') {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-subtitle').innerText = subtitle;
+      document.getElementById('modal-body').innerHTML = htmlBody;
+      document.getElementById('modal-icon').className = iconClass;
+      document.getElementById('custom-modal').classList.remove('hidden');
+      playTone(440, 'sine', 0.2, 0.08);
+    }
+
+    function closeModal() {
+      document.getElementById('custom-modal').classList.add('hidden');
+    }
+
+    /* =========================================================================
+       3. Tab Navigation
+       ========================================================================= */
+    function switchTab(tabId) {
+      state.currentTab = tabId;
+      playTone(523.25, 'sine', 0.1);
+
+      ['sim', 'quiz', 'grid', 'table'].forEach(t => {
+        const section = document.getElementById(`section-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tabId) {
+          section.classList.remove('hidden');
+          btn.className = 'tab-btn active px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 bg-cyan-500 text-white shadow-md shadow-cyan-500/20 font-semibold';
+        } else {
+          section.classList.add('hidden');
+          btn.className = 'tab-btn px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200';
+        }
+      });
+
+      if (tabId === 'sim') {
+        resizeCanvas();
+      } else if (tabId === 'quiz') {
+        loadChallenge(document.getElementById('challenge-type-select').value);
+      }
+    }
+
+    /* =========================================================================
+       4. Simulation Physics & Visualizer Setup
+       ========================================================================= */
+    const simMeta = {
+      wind: {
+        title: '풍력 발전 (바람의 운동에너지 ➔ 회전 ➔ 전자기 유도)',
+        principle: '전자기 유도 (Faraday Law)',
+        hint: '풍속 슬라이더를 조절하여 블레이드 회전 속도와 유도전압을 관찰하세요',
+        slider1: { label: '바람의 세기 (풍속)', min: 0, max: 30, step: 0.5, unit: 'm/s', minL: '0 m/s', midL: '15 m/s', maxL: '30 m/s (돌풍)' },
+        statLabels: ['회전 속도 (RPM)', '전자기 유도 기전력', '에너지 변환 효율', '탄소 배출량 (CO₂)'],
+        presets: [
+          { name: '미풍 (3 m/s)', val: 3 },
+          { name: '정격풍속 (12 m/s)', val: 12 },
+          { name: '강풍/돌풍 (24 m/s)', val: 24 }
+        ],
+        steps: [
+          { name: '1. 바람', desc: '공기 운동에너지', color: 'border-cyan-500 text-cyan-400' },
+          { name: '2. 블레이드', desc: '양력에 의한 회전', color: 'border-blue-500 text-blue-400' },
+          { name: '3. 발전기 터빈', desc: '자속 변화(ΔΦ/Δt)', color: 'border-emerald-500 text-emerald-400' },
+          { name: '4. 전기 생산', desc: '교류 유도기전력', color: 'border-amber-500 text-amber-400' }
+        ],
+        scienceTitle: '패러데이 전자기 유도와 베츠 법칙(Betz Limit)',
+        scienceDesc: '유입되는 공기 질량의 운동에너지(0.5·m·v³)가 회전 토크를 만듭니다. 발전기 내부의 자석이 코일을 통과하며 자속의 변화(Faraday)를 유도하여 전기를 생산합니다. 유체역학상 이론적 최대 효율은 59.3%입니다.',
+        equation: '발전출력 P = 0.5 · ρ · A · v³ · Cp',
+        badge: '물리학 I & 통합과학'
+      },
+      hydro: {
+        title: '수력 발전 (물의 위치/운동에너지 ➔ 수차 회전 ➔ 발전기)',
+        principle: '위치에너지 변환과 수차 전자기 유도',
+        hint: '낙차(수두)를 조절하여 터빈 회전력과 기전력을 비교해보세요',
+        slider1: { label: '낙차 (수두 높이 H)', min: 10, max: 120, step: 2, unit: 'm', minL: '10 m (저낙차)', midL: '60 m', maxL: '120 m (고낙차)' },
+        statLabels: ['수차 회전 속도', '발전 유도 기전력', '수력 변환 효율', '탄소 배출량 (CO₂)'],
+        presets: [
+          { name: '저낙차 (25 m)', val: 25 },
+          { name: '평시 정격 (60 m)', val: 60 },
+          { name: '고낙차 최대 (110 m)', val: 110 }
+        ],
+        steps: [
+          { name: '1. 댐 낙하수', desc: '위치에너지(mgh)', color: 'border-blue-500 text-blue-400' },
+          { name: '2. 펜스톡 노즐', desc: '고압 수류 가속', color: 'border-cyan-500 text-cyan-400' },
+          { name: '3. 수차 발전기', desc: '자석 로터 회전', color: 'border-emerald-500 text-emerald-400' },
+          { name: '4. 고전압 전기', desc: '송전용 전력 발생', color: 'border-amber-500 text-amber-400' }
+        ],
+        scienceTitle: '중력 위치에너지와 수차 터빈의 전자기 유도',
+        scienceDesc: '수면과 터빈 사이의 높이 차이로 발생하는 위치에너지가 펜스톡(관로)을 통과하며 고속 수류의 운동에너지로 변환됩니다. 수차가 발전기 전자석을 고속 회전시켜 대용량 교류 전력을 안정적으로 생산합니다.',
+        equation: '발전출력 P = η · ρ · g · Q · H',
+        badge: '통합과학 & 역학'
+      },
+      solar: {
+        title: '태양광 발전 (빛에너지 ➔ 광전효과 ➔ 직류 전기 생성)',
+        principle: '광기전력 효과 (Photovoltaic Effect - 비회전 방식)',
+        hint: '일사량을 변경하여 반도체 전자 이동과 직류 전력을 관찰하세요',
+        slider1: { label: '일사 강도 (Solar Irradiance)', min: 0, max: 100, step: 1, unit: '%', minL: '0% (야간)', midL: '50% (흐림)', maxL: '100% (쾌청)' },
+        statLabels: ['회전 장치 여부', '광기전력 (DC 직류)', '광전 변환 효율', '탄소 배출량 (CO₂)'],
+        presets: [
+          { name: '야간 (0%)', val: 0 },
+          { name: '흐린 날 (35%)', val: 35 },
+          { name: '한여름 쾌청 (100%)', val: 100 }
+        ],
+        steps: [
+          { name: '1. 태양 광자', desc: '빛에너지 입사', color: 'border-amber-500 text-amber-400' },
+          { name: '2. 반도체 흡수', desc: '전자-정공쌍 생성', color: 'border-cyan-500 text-cyan-400' },
+          { name: '3. p-n 접합면', desc: '전하 분리 및 이동', color: 'border-blue-500 text-blue-400' },
+          { name: '4. 직류 전력', desc: '인버터 거쳐 송전', color: 'border-emerald-500 text-emerald-400' }
+        ],
+        scienceTitle: '비회전 방식 : p-n 접합 반도체의 광기전력 효과',
+        scienceDesc: '터빈이나 모터의 회전 없이 순수하게 양자역학적 광전효과로 작동합니다. 반도체 패널에 빛(광자)이 닿으면 원자 내 전자가 에너지를 얻어 전도띠로 여기되어 전자(-)와 정공(+)이 분리되며 직류(DC) 전압이 형성됩니다.',
+        equation: '광전효과 에너지 E = h · ν - W',
+        badge: '물리학 I (물질과 전자기장)'
+      },
+      thermal: {
+        title: '화력 발전 (연료 화학에너지 ➔ 열·고압 증기 ➔ 증기 터빈)',
+        principle: '열역학 사이클 및 증기 터빈 전자기 유도',
+        hint: '연료 투입량을 올려 증기압과 터빈 회전, 굴뚝 탄소 배출을 비교하세요',
+        slider1: { label: '연료 연소 투입률', min: 10, max: 100, step: 5, unit: '%', minL: '10% (최저부하)', midL: '50% (정상)', maxL: '100% (최대출력)' },
+        statLabels: ['증기 터빈 속도', '발전기 출력 전압', '열역학 열효율', '탄소 배출량 (CO₂)'],
+        presets: [
+          { name: '최저 부하 (20%)', val: 20 },
+          { name: '정상 부하 (55%)', val: 55 },
+          { name: '최대 부하 (100%)', val: 100 }
+        ],
+        steps: [
+          { name: '1. 화석 연료', desc: '화학에너지 연소', color: 'border-rose-500 text-rose-400' },
+          { name: '2. 고압 증기', desc: '보일러 열 변환', color: 'border-amber-500 text-amber-400' },
+          { name: '3. 증기 터빈', desc: '블레이드 고속 회전', color: 'border-cyan-500 text-cyan-400' },
+          { name: '4. 대용량 전기', desc: '발전기 전자기 유도', color: 'border-emerald-500 text-emerald-400' }
+        ],
+        scienceTitle: '화학에너지에서 열, 그리고 운동을 거쳐 전기로',
+        scienceDesc: '석탄·LNG의 화학에너지를 연소시켜 고온·고압의 수증기를 만들고, 이 증기가 팽창하며 증기 터빈을 회전시켜 전기를 유도합니다. 날씨에 구애받지 않고 출력을 조절할 수 있으나 온실가스와 탄소를 다량 배출합니다.',
+        equation: '열효율 η = 1 - (Q_out / Q_in)',
+        badge: '통합과학 & 화학'
+      }
+    };
+
+    function selectSimMode(mode) {
+      state.simMode = mode;
+      playTone(440, 'triangle', 0.15);
+
+      ['wind', 'hydro', 'solar', 'thermal'].forEach(m => {
+        const btn = document.getElementById(`sim-btn-${m}`);
+        if (m === mode) {
+          btn.className = 'sim-mode-btn active px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-cyan-500 text-white shadow-md shadow-cyan-500/20';
+        } else {
+          btn.className = 'sim-mode-btn px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white';
+        }
+      });
+
+      updateSimUI();
+    }
+
+    function applyPreset(val) {
+      setParam(state.simMode, val);
+      playTone(520, 'sine', 0.12);
+      updateSimUI();
+    }
+
+    function updateSimUI() {
+      const mode = state.simMode;
+      const info = simMeta[mode];
+
+      document.getElementById('canvas-status-title').innerText = info.title;
+      document.getElementById('overlay-principle-badge').innerText = info.principle;
+      document.getElementById('overlay-dynamic-hint').innerText = info.hint;
+
+      // Presets
+      const presetBox = document.getElementById('sim-presets-container');
+      presetBox.innerHTML = '';
+      info.presets.forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'px-2 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-300 text-[11px] font-medium border border-slate-700/60 transition truncate';
+        btn.innerText = p.name;
+        btn.onclick = () => applyPreset(p.val);
+        presetBox.appendChild(btn);
+      });
+
+      // Slider 1 Sync
+      const s1 = info.slider1;
+      const slider1 = document.getElementById('paramSlider1');
+      slider1.min = s1.min;
+      slider1.max = s1.max;
+      slider1.step = s1.step;
+      const currentVal1 = getParam(mode);
+      slider1.value = currentVal1;
+      document.getElementById('slider1-label').innerText = s1.label;
+      document.getElementById('slider1-val').innerText = `${currentVal1} ${s1.unit}`;
+      document.getElementById('slider1-min').innerText = s1.minL;
+      document.getElementById('slider1-mid').innerText = s1.midL;
+      document.getElementById('slider1-max').innerText = s1.maxL;
+
+      // Stat Label names
+      document.getElementById('stat1-name').innerText = info.statLabels[0];
+      document.getElementById('stat2-name').innerText = info.statLabels[1];
+      document.getElementById('stat3-name').innerText = info.statLabels[2];
+      document.getElementById('stat4-name').innerText = info.statLabels[3];
+
+      // Steps pipeline
+      const stepsContainer = document.getElementById('diagram-step-boxes');
+      stepsContainer.innerHTML = '';
+      info.steps.forEach((step) => {
+        const box = document.createElement('div');
+        box.className = `p-2 rounded-lg bg-slate-950/70 border ${step.color} transition`;
+        box.innerHTML = `
+          <div class="font-bold text-[11px]">${step.name}</div>
+          <div class="text-[10px] opacity-75">${step.desc}</div>
+        `;
+        stepsContainer.appendChild(box);
+      });
+
+      // Science explanation
+      document.getElementById('science-principle-title').innerText = info.scienceTitle;
+      document.getElementById('science-principle-desc').innerHTML = info.scienceDesc;
+      document.getElementById('science-equation').innerText = info.equation;
+      document.getElementById('science-badge').innerText = info.badge;
+    }
+
+    function resetSimParams() {
+      state.params = {
+        wind: { speed: 12 },
+        hydro: { head: 45 },
+        solar: { irradiance: 75 },
+        thermal: { fuelRate: 50 }
+      };
+      playTone(330, 'sine', 0.1);
+      updateSimUI();
+    }
+
+    // Slider Event Listener (Slider 1 Only)
+    document.getElementById('paramSlider1').addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      const m = state.simMode;
+      const unit = simMeta[m].slider1.unit;
+      setParam(m, v);
+      document.getElementById('slider1-val').innerText = `${v} ${unit}`;
+    });
+
+    /* =========================================================================
+       5. 2D Canvas Physics Animation Loop
+       ========================================================================= */
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    let angleRot = 0;
+    let waterParticles = [];
+    let photonParticles = [];
+    let electronParticles = [];
+    let steamParticles = [];
+    let smokeParticles = [];
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Initialize particles
+    for (let i = 0; i < 45; i++) {
+      waterParticles.push({ prog: Math.random(), size: 2 + Math.random() * 3, lane: Math.random() * 10 - 5 });
+      photonParticles.push({ 
+        prog: Math.random(), 
+        offset: (Math.random() - 0.5) * 110, 
+        speed: 0.012 + Math.random() * 0.008, 
+        size: 2 + Math.random() * 1.5 
+      });
+      electronParticles.push({ prog: Math.random() });
+      steamParticles.push({ x: 120 + Math.random() * 120, y: 150 + Math.random() * 6 - 3, r: 2 + Math.random() * 3, alpha: 0.8 });
+      smokeParticles.push({ x: 90 + Math.random() * 10 - 5, y: 80 - Math.random() * 60, r: 3 + Math.random() * 6, vy: 1 + Math.random() * 1.5, alpha: Math.random() * 0.7 });
+    }
+    function renderSimulation() {
+      const w = canvas.width / window.devicePixelRatio;
+      const h = canvas.height / window.devicePixelRatio;
+      ctx.clearRect(0, 0, w, h);
+
+      const mode = state.simMode;
+      let powerKW = 0;
+      let rpm = 0;
+      let voltage = 0;
+      let efficiency = 0;
+      let co2 = 0;
+
+      if (mode === 'wind') {
+        const speed = state.params.wind.speed;
+        const size = 50; // 기준 블레이드 규격 고정 (50m)
+
+        // P = 0.5 * rho * A * v^3 * Cp
+        powerKW = Math.round(0.0006 * Math.PI * Math.pow(size, 2) * Math.pow(speed, 3) * 0.42);
+        rpm = speed > 0.5 ? Math.round(speed * (50 / (size * 0.4))) : 0;
+        voltage = Math.min(690, Math.round(rpm * 15.2));
+        efficiency = speed >= 3 ? 43.5 : (speed > 0 ? 15.0 : 0);
+        co2 = 0;
+
+        angleRot += (rpm * 0.002);
+
+        // Wind speed lines
+        ctx.strokeStyle = speed > 18 ? 'rgba(6, 182, 212, 0.6)' : 'rgba(6, 182, 212, 0.25)';
+        ctx.lineWidth = Math.min(3, 1 + speed * 0.08);
+        for (let i = 0; i < 7; i++) {
+          const yPos = 35 + i * 32;
+          const xOffset = ((Date.now() * (speed * 0.12) + i * 85) % (w + 120)) - 60;
+          ctx.beginPath();
+          ctx.moveTo(xOffset, yPos);
+          ctx.lineTo(xOffset + 35 + speed * 3.5, yPos);
+          ctx.stroke();
+        }
+
+        // Wind Turbine Tower
+        const cx = w * 0.42;
+        const cy = h * 0.52;
+        const bladeLen = 72;
+
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.moveTo(cx - 7, cy);
+        ctx.lineTo(cx + 7, cy);
+        ctx.lineTo(cx + 15, h - 25);
+        ctx.lineTo(cx - 15, h - 25);
+        ctx.closePath();
+        ctx.fill();
+
+        // Hub & Rotor
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angleRot);
+
+        for (let b = 0; b < 3; b++) {
+          ctx.save();
+          ctx.rotate((b * 2 * Math.PI) / 3);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.shadowColor = '#06b6d4';
+          ctx.shadowBlur = speed > 10 ? 8 : 1;
+          ctx.beginPath();
+          ctx.moveTo(-5, 0);
+          ctx.lineTo(0, -bladeLen);
+          ctx.lineTo(5, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Hub Center
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#06b6d4';
+        ctx.beginPath();
+        ctx.arc(0, 0, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Generator Box
+        drawInductionGeneratorBox(ctx, cx + 45, cy - 25, rpm, powerKW);
+
+        // Stats Display
+        document.getElementById('stat1-val').innerText = `${rpm} rpm`;
+        document.getElementById('stat2-val').innerText = `${voltage} V (교류)`;
+        document.getElementById('stat3-val').innerText = `${efficiency} %`;
+        document.getElementById('stat4-val').innerText = `0.0 g/kWh (친환경)`;
+
+      } else if (mode === 'hydro') {
+        const head = state.params.hydro.head;
+        const flow = 50; // 기준 방류 유량 고정 (50 m³/s)
+
+        powerKW = Math.round(9.81 * flow * head * 0.88);
+        rpm = Math.round(Math.sqrt(head) * 14);
+        voltage = Math.min(6600, Math.round(Math.sqrt(head) * 220));
+        efficiency = 88.5;
+        co2 = 0;
+
+        angleRot += (rpm * 0.0018);
+
+        // Dam structure
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(25, 45, w * 0.28, h - 70);
+
+        // Reservoir Water
+        const waterHeight = Math.min(h * 0.45, 30 + (head / 120) * (h * 0.35));
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.55)';
+        ctx.fillRect(25, 55, w * 0.28, waterHeight);
+
+        // Dam label
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10px monospace';
+        ctx.fillText(`수두(낙차): ${head}m`, 30, 75);
+
+        // Penstock Pipe
+        const pipeStartX = 25 + w * 0.28;
+        const pipeStartY = 55 + waterHeight * 0.8;
+        const tx = w * 0.62;
+        const ty = h - 60;
+
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 16;
+        ctx.beginPath();
+        ctx.moveTo(pipeStartX, pipeStartY);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+
+        // Water particles flowing in penstock
+        ctx.fillStyle = '#60a5fa';
+        const flowSpeed = 0.008 + (head * 0.00025);
+        waterParticles.forEach(p => {
+          p.prog += flowSpeed;
+          if (p.prog > 1) p.prog = 0;
+          const px = pipeStartX + (tx - pipeStartX) * p.prog;
+          const py = pipeStartY + (ty - pipeStartY) * p.prog;
+          ctx.beginPath();
+          ctx.arc(px + p.lane, py, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Water Turbine (Pelton wheel)
+        ctx.save();
+        ctx.translate(tx, ty);
+        ctx.rotate(angleRot);
+        ctx.fillStyle = '#38bdf8';
+        for (let r = 0; r < 8; r++) {
+          ctx.save();
+          ctx.rotate((r * Math.PI) / 4);
+          ctx.fillRect(-5, -24, 10, 14);
+          ctx.restore();
+        }
+        ctx.beginPath();
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.fillStyle = '#0284c7';
+        ctx.fill();
+        ctx.restore();
+
+        // Generator Box
+        drawInductionGeneratorBox(ctx, tx + 40, ty - 30, rpm, powerKW);
+
+        // Stats Display
+        document.getElementById('stat1-val').innerText = `${rpm} rpm`;
+        document.getElementById('stat2-val').innerText = `${voltage} V (유도전압)`;
+        document.getElementById('stat3-val').innerText = `${efficiency} %`;
+        document.getElementById('stat4-val').innerText = `0.0 g/kWh (친환경)`;
+
+      } else if (mode === 'solar') {
+        const irr = state.params.solar.irradiance;
+        const panelAngle = -0.52; // 태양 방향으로 30도 상향 경사 (최적 각도)
+        const cosA = Math.cos(panelAngle);
+        const sinA = Math.sin(panelAngle);
+
+        powerKW = Math.round((irr / 100) * 850);
+        rpm = 0; // 비회전
+        voltage = Math.round((irr / 100) * 48);
+        efficiency = irr > 0 ? 21.4 : 0;
+        co2 = 0;
+
+        // Sun position
+        const sunX = Math.min(95, w * 0.16);
+        const sunY = Math.min(65, h * 0.22);
+        const sunAlpha = Math.max(0.2, irr / 100);
+
+        // Panel mount & pivot position
+        const mountX = w * 0.46;
+        const mountY = h * 0.70;
+        const pivotX = mountX;
+        const pivotY = mountY - 18;
+
+        // Sun Body & Corona
+        ctx.fillStyle = `rgba(245, 158, 11, ${sunAlpha})`;
+        ctx.shadowColor = '#f59e0b';
+        ctx.shadowBlur = irr > 10 ? 30 : 4;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 28, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        if (irr > 10) {
+          ctx.strokeStyle = `rgba(251, 191, 36, ${0.15 + (irr / 100) * 0.35})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(sunX, sunY, 35 + Math.sin(Date.now() * 0.003) * 3, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.fillStyle = '#fef08a';
+          ctx.font = '10px monospace';
+          ctx.fillText(`태양광 (${irr}%)`, sunX - 25, sunY + 48);
+        }
+
+        // Directional Sunbeam Cone & Photons into Panel
+        if (irr > 2) {
+          // Panel surface endpoints
+          const p1x = pivotX - 60 * cosA;
+          const p1y = pivotY - 60 * sinA - 6;
+          const p2x = pivotX + 60 * cosA;
+          const p2y = pivotY + 60 * sinA - 6;
+
+          // Golden sunlight shaft from sun to solar panel
+          const beamGrad = ctx.createLinearGradient(sunX, sunY, pivotX, pivotY);
+          beamGrad.addColorStop(0, `rgba(253, 224, 71, ${0.08 + (irr / 100) * 0.22})`);
+          beamGrad.addColorStop(0.7, `rgba(253, 224, 71, ${0.03 + (irr / 100) * 0.10})`);
+          beamGrad.addColorStop(1, 'rgba(253, 224, 71, 0.02)');
+
+          ctx.fillStyle = beamGrad;
+          ctx.beginPath();
+          ctx.moveTo(sunX - 10, sunY + 15);
+          ctx.lineTo(sunX + 22, sunY + 8);
+          ctx.lineTo(p2x, p2y);
+          ctx.lineTo(p1x, p1y);
+          ctx.closePath();
+          ctx.fill();
+
+          // Photons traveling along the direct line of sight into the panel
+          ctx.shadowBlur = 6;
+          photonParticles.forEach(p => {
+            p.prog += (0.012 + (irr / 100) * 0.022);
+            if (p.prog > 1) {
+              p.prog = 0;
+              p.offset = (Math.random() - 0.5) * 110;
+            }
+
+            // Exact target location on the tilted panel surface
+            const targetX = pivotX + p.offset * cosA;
+            const targetY = pivotY + p.offset * sinA - 6;
+
+            const currX = sunX + (targetX - sunX) * p.prog;
+            const currY = sunY + (targetY - sunY) * p.prog;
+
+            // Glowing photon
+            ctx.fillStyle = '#fef08a';
+            ctx.shadowColor = '#facc15';
+            ctx.beginPath();
+            ctx.arc(currX, currY, p.size || 2.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Light trail
+            ctx.strokeStyle = 'rgba(253, 224, 71, 0.45)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(currX, currY);
+            ctx.lineTo(currX - (targetX - sunX) * 0.05, currY - (targetY - sunY) * 0.05);
+            ctx.stroke();
+
+            // Photoelectric absorption spark when photon enters the panel
+            if (p.prog > 0.93) {
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+              ctx.beginPath();
+              ctx.arc(targetX, targetY, 3.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          });
+          ctx.shadowBlur = 0;
+        }
+
+        // Panel Stand & Pivot
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(mountX - 6, mountY - 18, 12, 45);
+        ctx.fillRect(mountX - 25, mountY + 22, 50, 6);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.arc(pivotX, pivotY, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tilted PV Panel Body
+        ctx.save();
+        ctx.translate(pivotX, pivotY);
+        ctx.rotate(panelAngle);
+
+        // Aluminum frame
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(-65, -8, 130, 16);
+
+        // Silicon solar cell surface (facing incoming light)
+        ctx.fillStyle = irr > 5 ? '#1e3a8a' : '#0f172a';
+        ctx.strokeStyle = irr > 5 ? '#38bdf8' : '#334155';
+        ctx.lineWidth = 2;
+        ctx.fillRect(-65, -13, 130, 8);
+        ctx.strokeRect(-65, -13, 130, 8);
+
+        // Solar cell grid divisions
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 1;
+        for (let gl = -55; gl <= 55; gl += 18) {
+          ctx.beginPath();
+          ctx.moveTo(gl, -13);
+          ctx.lineTo(gl, -5);
+          ctx.stroke();
+        }
+
+        // Photoelectric excitation glow on panel
+        if (powerKW > 0) {
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.3)';
+          ctx.fillRect(-64, -12, 128, 6);
+        }
+        ctx.restore();
+
+        // Label
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10px monospace';
+        ctx.fillText('PV 태양전지 (광전효과)', mountX - 55, mountY + 38);
+
+        // Circuit line from Panel Mount to Inverter
+        const invX = w * 0.74;
+        const invY = h * 0.58;
+
+        ctx.strokeStyle = powerKW > 0 ? '#38bdf8' : '#475569';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(mountX, mountY + 5);
+        ctx.lineTo(mountX + 45, mountY + 5);
+        ctx.lineTo(invX, invY + 25);
+        ctx.stroke();
+
+        // Flowing Electrons (DC) into Inverter
+        if (powerKW > 0) {
+          ctx.fillStyle = '#67e8f9';
+          ctx.shadowColor = '#06b6d4';
+          ctx.shadowBlur = 4;
+          electronParticles.forEach(ep => {
+            ep.prog += 0.012 * Math.max(0.5, powerKW / 400);
+            if (ep.prog > 1) ep.prog = 0;
+            let ex, ey;
+            if (ep.prog < 0.3) {
+              const segP = ep.prog / 0.3;
+              ex = mountX + 45 * segP;
+              ey = mountY + 5;
+            } else {
+              const segP = (ep.prog - 0.3) / 0.7;
+              ex = (mountX + 45) + (invX - (mountX + 45)) * segP;
+              ey = (mountY + 5) + (invY + 25 - (mountY + 5)) * segP;
+            }
+            ctx.beginPath();
+            ctx.arc(ex, ey, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.shadowBlur = 0;
+        }
+
+        // Inverter (DC ➔ AC) Box
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = powerKW > 0 ? '#10b981' : '#475569';
+        ctx.lineWidth = 2;
+        ctx.fillRect(invX, invY, 78, 55);
+        ctx.strokeRect(invX, invY, 78, 55);
+
+        ctx.fillStyle = '#10b981';
+        ctx.font = '10px monospace';
+        ctx.fillText('INVERTER', invX + 10, invY + 20);
+        ctx.fillText('DC ➔ AC', invX + 14, invY + 36);
+
+        // Inverter Output Power Line
+        if (powerKW > 0) {
+          ctx.strokeStyle = '#10b981';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(invX + 78, invY + 27);
+          ctx.lineTo(invX + 105, invY + 27);
+          ctx.stroke();
+
+          ctx.fillStyle = '#10b981';
+          ctx.beginPath();
+          ctx.arc(invX + 107, invY + 27, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Stats Display
+        document.getElementById('stat1-val').innerText = '회전 없음 (비회전식)';
+        document.getElementById('stat2-val').innerText = `${voltage} V (직류 DC)`;
+        document.getElementById('stat3-val').innerText = `${efficiency} %`;
+        document.getElementById('stat4-val').innerText = `0.0 g/kWh (친환경)`;
+
+      } else if (mode === 'thermal') {
+        const fuel = state.params.thermal.fuelRate;
+        const temp = 450; // 기준 증기 온도 고정 (450℃)
+
+        powerKW = Math.round(fuel * 4.5 * 8.5);
+        rpm = Math.round(fuel * 34);
+        voltage = 22000;
+        efficiency = 38.0;
+        co2 = Math.round(fuel * 8.8);
+
+        angleRot += (rpm * 0.002);
+
+        // Boiler & Chimney Structure
+        const boilerX = 40;
+        const boilerY = h * 0.42;
+        const boilerW = 90;
+        const boilerH = h * 0.48;
+
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(boilerX, boilerY, boilerW, boilerH);
+
+        // Chimney Stack
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(boilerX + 15, boilerY - 45, 25, 45);
+
+        // Smoke particles (CO2 emissions)
+        smokeParticles.forEach(sp => {
+          sp.y -= sp.vy * (fuel / 40);
+          sp.x += (Math.random() - 0.5) * 1.2;
+          if (sp.y < 10) {
+            sp.y = boilerY - 45;
+            sp.x = boilerX + 27 + (Math.random() * 8 - 4);
+          }
+          ctx.fillStyle = `rgba(148, 163, 184, ${(fuel / 100) * 0.6})`;
+          ctx.beginPath();
+          ctx.arc(sp.x, sp.y, sp.r * (fuel / 50), 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Boiler label
+        ctx.fillStyle = '#f87171';
+        ctx.font = '10px monospace';
+        ctx.fillText('BOILER', boilerX + 24, boilerY + 22);
+
+        // Animated Flame inside boiler
+        const flameHeight = 15 + (fuel * 0.35);
+        ctx.fillStyle = fuel > 60 ? '#ef4444' : '#f97316';
+        ctx.beginPath();
+        ctx.moveTo(boilerX + 15, boilerY + boilerH - 10);
+        ctx.lineTo(boilerX + boilerW / 2, boilerY + boilerH - 10 - flameHeight);
+        ctx.lineTo(boilerX + boilerW - 15, boilerY + boilerH - 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // High Pressure Steam Pipe
+        const stX = w * 0.60;
+        const stY = boilerY + 25;
+
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.moveTo(boilerX + boilerW, stY);
+        ctx.lineTo(stX, stY);
+        ctx.stroke();
+
+        // Steam particles
+        steamParticles.forEach(p => {
+          p.x += (fuel * 0.08) * (temp / 350);
+          if (p.x > stX) p.x = boilerX + boilerW;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+          ctx.beginPath();
+          ctx.arc(p.x, stY, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Steam Turbine Wheel
+        ctx.save();
+        ctx.translate(stX, stY);
+        ctx.rotate(angleRot);
+        ctx.fillStyle = '#cbd5e1';
+        for (let b = 0; b < 6; b++) {
+          ctx.save();
+          ctx.rotate((b * Math.PI) / 3);
+          ctx.fillRect(-5, -22, 10, 15);
+          ctx.restore();
+        }
+        ctx.beginPath();
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.fillStyle = '#475569';
+        ctx.fill();
+        ctx.restore();
+
+        // Generator Box
+        drawInductionGeneratorBox(ctx, stX + 45, stY - 25, rpm, powerKW);
+
+        // Stats Display
+        document.getElementById('stat1-val').innerText = `${rpm} rpm`;
+        document.getElementById('stat2-val').innerText = `${voltage} V (고압)`;
+        document.getElementById('stat3-val').innerText = `${efficiency} %`;
+        document.getElementById('stat4-val').innerText = `${co2} g/kWh (온실가스)`;
+      }
+
+      // Telemetry Output Badge
+      document.getElementById('telemetry-power-badge').innerText = `발전 출력: ${powerKW.toLocaleString()} kW`;
+
+      requestAnimationFrame(renderSimulation);
+    }
+    function drawInductionGeneratorBox(ctx, gx, gy, rpm, kw) {
+      // Generator Casing
+      ctx.fillStyle = '#0f172a';
+      ctx.strokeStyle = kw > 0 ? '#06b6d4' : '#475569';
+      ctx.lineWidth = 2;
+      ctx.fillRect(gx, gy, 70, 50);
+      ctx.strokeRect(gx, gy, 70, 50);
+
+      // Label
+      ctx.fillStyle = '#06b6d4';
+      ctx.font = '10px monospace';
+      ctx.fillText('GENERATOR', gx + 6, gy + 18);
+      ctx.fillText(`ΔΦ: ${rpm > 0 ? 'HIGH' : '0'}`, gx + 10, gy + 32);
+
+      // Output Spark Line
+      if (kw > 0) {
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(gx + 70, gy + 25);
+        ctx.lineTo(gx + 100, gy + 25);
+        ctx.stroke();
+
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.arc(gx + 102, gy + 25, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    /* =========================================================================
+       6. Energy Transformation Pipeline Challenge (Interactive Quiz)
+       ========================================================================= */
+    const challengeData = {
+      wind: {
+        correct: ['바람 (운동에너지)', '날개 블레이드 회전', '풍력 터빈 & 발전기', '전기 (교류 전압)'],
+        distractors: ['빛 (광에너지)', '수차 회전운동', '광전효과 (전자 이동)', '연소 열에너지', '증기 터빈'],
+        desc: '풍력 발전은 대기의 운동에너지를 블레이드의 기계적 회전으로 바꾸고, 발전기 자석을 돌려 전자기 유도를 일으킵니다.'
+      },
+      hydro: {
+        correct: ['물 (위치·운동에너지)', '수차 회전운동', '수차 & 발전기', '전기 (교류 전압)'],
+        distractors: ['바람 (운동에너지)', '광전효과 (전자 이동)', '태양전지 (반도체 패널)', '연소 열 ➔ 증기'],
+        desc: '수력 발전은 낙하하는 물의 위치에너지를 수차의 회전력으로 바꾸어 자석을 움직여 전류를 생성합니다.'
+      },
+      solar: {
+        correct: ['빛 (광에너지)', '광전효과 (전자 이동)', '태양전지 (반도체 패널)', '전기 (직류 전압)'],
+        distractors: ['날개 블레이드 회전', '풍력 터빈 & 발전기', '수차 & 발전기', '연소 열 ➔ 증기 회전'],
+        desc: '태양광 발전은 회전 부품 없이 반도체 내부의 광전효과를 통해 전자를 직접 분리·이동시키는 비회전 발전입니다.'
+      },
+      thermal: {
+        correct: ['연료 (화학에너지)', '연소 열 ➔ 증기 회전', '증기 터빈 & 발전기', '전기 (교류 전압)'],
+        distractors: ['물 (위치에너지)', '광전효과 (전자 이동)', '태양전지 패널', '바람 (운동에너지)'],
+        desc: '화력 발전은 연료의 연소열로 물을 끓여 고압 증기를 만든 후, 증기 터빈을 회전시켜 전자기 유도로 발전합니다.'
+      }
+    };
+
+    let userSlotAnswers = [null, null, null, null];
+
+    function loadChallenge(type) {
+      userSlotAnswers = [null, null, null, null];
+      for (let i = 0; i < 4; i++) {
+        renderSlot(i, null);
+      }
+      document.getElementById('quiz-result-banner').classList.add('hidden');
+
+      const data = challengeData[type];
+      const allCards = [...data.correct, ...data.distractors];
+      // Shuffle array
+      allCards.sort(() => Math.random() - 0.5);
+
+      const pool = document.getElementById('card-pool');
+      pool.innerHTML = '';
+      allCards.forEach(txt => {
+        const card = document.createElement('div');
+        card.className = 'quiz-card px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-slate-200 cursor-pointer shadow transition transform hover:-translate-y-0.5';
+        card.innerText = txt;
+        card.draggable = true;
+        card.ondragstart = (e) => e.dataTransfer.setData('text/plain', txt);
+        card.onclick = () => assignCardToFirstEmptySlot(txt);
+        pool.appendChild(card);
+      });
+    }
+
+    function assignCardToFirstEmptySlot(cardText) {
+      const emptyIdx = userSlotAnswers.findIndex(ans => ans === null);
+      if (emptyIdx !== -1) {
+        userSlotAnswers[emptyIdx] = cardText;
+        renderSlot(emptyIdx, cardText);
+        playTone(400 + emptyIdx * 80, 'sine', 0.1);
+
+        // 4개 슬롯이 모두 채워지면 0.2초 후 자동 판정 및 완성 팝업 호출
+        if (!userSlotAnswers.includes(null)) {
+          setTimeout(() => checkChallengeAnswer(), 200);
+        }
+      } else {
+        showModal('모든 슬롯이 채워졌습니다', '슬롯을 비우려면 슬롯 카드를 클릭하세요', '슬롯을 수정하려면 등록된 카드를 클릭하여 제거한 후 다시 선택하세요.');
+      }
+    }
+
+    function renderSlot(idx, cardText) {
+      const slot = document.getElementById(`slot-${idx}`);
+      const content = slot.querySelector('.slot-content');
+      const footer = slot.querySelector('.slot-footer');
+
+      if (cardText) {
+        slot.classList.remove('border-dashed', 'border-slate-700');
+        slot.classList.add('border-solid', 'border-cyan-400', 'bg-cyan-950/20');
+        content.innerHTML = `
+          <div class="text-sm font-bold text-white bg-slate-900 p-2.5 rounded-lg border border-cyan-500/50 flex items-center justify-between cursor-pointer" onclick="removeSlot(${idx})" title="클릭하여 제거">
+            <span>${cardText}</span>
+            <i class="fa-solid fa-xmark text-slate-400 hover:text-rose-400 text-xs"></i>
+          </div>
+        `;
+        footer.classList.remove('hidden');
+        footer.innerText = '클릭 시 취소';
+      } else {
+        slot.classList.remove('border-solid', 'border-cyan-400', 'border-emerald-400', 'border-rose-400', 'bg-cyan-950/20');
+        slot.classList.add('border-dashed', 'border-slate-700');
+        content.innerHTML = `아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요`;
+        footer.classList.add('hidden');
+      }
+    }
+
+    function removeSlot(idx) {
+      userSlotAnswers[idx] = null;
+      renderSlot(idx, null);
+      playTone(280, 'sine', 0.1);
+      document.getElementById('quiz-result-banner').classList.add('hidden');
+    }
+
+    function allowDrop(e) {
+      e.preventDefault();
+    }
+
+    function handleDrop(e, slotIdx) {
+      e.preventDefault();
+      const txt = e.dataTransfer.getData('text/plain');
+      if (txt) {
+        userSlotAnswers[slotIdx] = txt;
+        renderSlot(slotIdx, txt);
+        playTone(490, 'sine', 0.1);
+
+        // 드롭으로 마지막 슬롯이 채워진 경우 자동 검증
+        if (!userSlotAnswers.includes(null)) {
+          setTimeout(() => checkChallengeAnswer(), 200);
+        }
+      }
+    }
+
+    function resetCurrentChallenge() {
+      const type = document.getElementById('challenge-type-select').value;
+      loadChallenge(type);
+      playTone(300, 'sine', 0.15);
+    }
+
+    function checkChallengeAnswer() {
+      const type = document.getElementById('challenge-type-select').value;
+      const data = challengeData[type];
+      const correct = data.correct;
+
+      if (userSlotAnswers.includes(null)) {
+        showModal(
+          '미완성 슬롯 확인',
+          '다시 배치하세요',
+          '<div class="space-y-2"><p class="text-amber-300 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> 아직 비어 있는 단계가 있습니다.</p><p class="text-slate-300 text-xs leading-relaxed">초기 자연 에너지부터 최종 전기 형태까지 4개 단계를 모두 채운 후 정답을 검증할 수 있습니다. 카드를 선택해 빈 슬롯에 채워주세요.</p></div>',
+          'fa-solid fa-circle-exclamation text-amber-400'
+        );
+        return;
+      }
+
+      let isAllCorrect = true;
+      const wrongSteps = [];
+
+      for (let i = 0; i < 4; i++) {
+        const slot = document.getElementById(`slot-${i}`);
+        if (userSlotAnswers[i] === correct[i]) {
+          slot.classList.remove('border-cyan-400', 'border-rose-500');
+          slot.classList.add('border-emerald-400');
+        } else {
+          slot.classList.remove('border-cyan-400', 'border-emerald-400');
+          slot.classList.add('border-rose-500');
+          isAllCorrect = false;
+          wrongSteps.push(`${i + 1}단계`);
+        }
+      }
+
+      const banner = document.getElementById('quiz-result-banner');
+      const icon = document.getElementById('quiz-result-icon');
+      const title = document.getElementById('quiz-result-title');
+      const desc = document.getElementById('quiz-result-desc');
+
+      banner.classList.remove('hidden');
+
+      if (isAllCorrect) {
+        banner.className = 'p-4 rounded-xl border border-emerald-500/80 bg-emerald-950/40 text-emerald-300 flex items-center justify-between';
+        icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 text-2xl"></i>';
+        title.innerText = '축하합니다! 완벽하게 에너지 변환 체계를 조립했습니다.';
+        desc.innerText = data.desc;
+
+        // 축하 효과음
+        playTone(523.25, 'triangle', 0.2);
+        setTimeout(() => playTone(659.25, 'triangle', 0.25), 150);
+        setTimeout(() => playTone(783.99, 'triangle', 0.35), 300);
+
+        const genNames = {
+          wind: '풍력 발전 (Wind Power)',
+          hydro: '수력 발전 (Hydroelectric)',
+          solar: '태양광 발전 (Solar Photovoltaic)',
+          thermal: '화력 발전 (Thermal Power)'
+        };
+        const curName = genNames[type] || '재생에너지 발전';
+
+        // 1~4단계 완성 전용 종합 팝업 템플릿
+        const completionHtml = `
+          <div class="space-y-4">
+            <div class="p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-700/80 text-emerald-200 text-xs space-y-1.5">
+              <div class="font-bold flex items-center gap-2 text-sm text-emerald-300">
+                <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i> 1단계부터 4단계까지 정확하게 완성되었습니다!
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">${data.desc}</p>
+            </div>
+
+            <!-- Pipeline Visual Step Cards -->
+            <div class="space-y-1.5">
+              <span class="text-[11px] font-bold text-slate-400">조립 완성된 에너지 변환 체계:</span>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/60 text-center">
+                  <span class="text-[10px] text-slate-400 block font-semibold mb-1">1단계: 초기 에너지</span>
+                  <span class="text-xs font-bold text-cyan-300">${correct[0]}</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/60 text-center">
+                  <span class="text-[10px] text-slate-400 block font-semibold mb-1">2단계: 중간 변환</span>
+                  <span class="text-xs font-bold text-blue-300">${correct[1]}</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/60 text-center">
+                  <span class="text-[10px] text-slate-400 block font-semibold mb-1">3단계: 핵심 장치</span>
+                  <span class="text-xs font-bold text-amber-300">${correct[2]}</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/60 text-center">
+                  <span class="text-[10px] text-slate-400 block font-semibold mb-1">4단계: 최종 형태</span>
+                  <span class="text-xs font-bold text-emerald-400">${correct[3]}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Next Challenge Guidance -->
+            <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between gap-3">
+              <span>다른 발전 방식의 변환 구조와 원리도 계속 탐구해보세요.</span>
+              <button onclick="goToNextChallenge('${type}')" class="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 font-bold text-xs text-white transition flex items-center gap-1.5 shrink-0">
+                <span>다음 발전 도전</span> <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        `;
+
+        showModal(
+          `🎉 ${curName} 파이프라인 조립 완성!`,
+          '에너지 변환 4단계 구축 성공',
+          completionHtml,
+          'fa-solid fa-trophy text-amber-400'
+        );
+      } else {
+        banner.className = 'p-4 rounded-xl border border-rose-500/80 bg-rose-950/40 text-rose-300 flex items-center justify-between';
+        icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-400 text-2xl"></i>';
+        title.innerText = '일부 단계의 내용이 맞지 않습니다.';
+        desc.innerText = '빨간색으로 표시된 슬롯을 클릭하여 제거하고 올바른 순서로 다시 배치하세요.';
+        playTone(220, 'sawtooth', 0.3);
+
+        // 잘못 들어간 단계 안내 및 다시 배치 경고 팝업 호출
+        showModal(
+          '단계 구성 오류 경고',
+          '다시 배치하세요',
+          `<div class="space-y-3">
+            <div class="p-2.5 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 font-semibold text-xs flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base"></i>
+              <span>[${wrongSteps.join(', ')}]에 잘못된 카드가 배치되었습니다.</span>
+            </div>
+            <p class="text-slate-300 text-xs leading-relaxed">
+              자연 에너지에서 시작하여 최종 전기가 만들어지는 4단계 순서를 다시 확인하세요.
+              <br><br>
+              <strong>빨간색 테두리로 표시된 슬롯의 카드를 클릭하여 제거한 후 올바른 카드로 다시 배치하세요.</strong>
+            </p>
+          </div>`,
+          'fa-solid fa-triangle-exclamation text-rose-400'
+        );
+      }
+    }
+
+    function goToNextChallenge(currentType) {
+      closeModal();
+      const types = ['wind', 'hydro', 'solar', 'thermal'];
+      const nextIdx = (types.indexOf(currentType) + 1) % types.length;
+      const nextType = types[nextIdx];
+      document.getElementById('challenge-type-select').value = nextType;
+      loadChallenge(nextType);
+      playTone(520, 'sine', 0.15);
+    }
+
+    /* =========================================================================
+       7. 19:00 Peak Hour Grid Crisis Simulation Game
+       ========================================================================= */
+    function startGridEmergency() {
+      const g = state.gridGame;
+      if (g.running) return;
+
+      g.running = true;
+      g.timer = 90.0;
+      g.allocated = 0;
+      g.sectors.forEach(s => s.on = false);
+      updateGridUI();
+
+      document.getElementById('grid-start-btn').classList.add('opacity-50', 'pointer-events-none');
+      playTone(880, 'sine', 0.3, 0.1);
+
+      g.timerInterval = setInterval(() => {
+        g.timer -= 0.1;
+        if (g.timer <= 0) {
+          g.timer = 0;
+          clearInterval(g.timerInterval);
+          g.running = false;
+          submitGridDecision(true);
+        }
+        document.getElementById('grid-timer').innerText = `${g.timer.toFixed(1)}초`;
+      }, 100);
+    }
+
+    function toggleSector(idx) {
+      const g = state.gridGame;
+      const sector = g.sectors[idx];
+
+      if (sector.on) {
+        // Turn OFF
+        sector.on = false;
+        g.allocated -= sector.req;
+        playTone(330, 'sine', 0.1);
+      } else {
+        // Check capacity (max 70%)
+        if (g.allocated + sector.req > 70) {
+          showModal('송전 용량 초과 경보 (블랙아웃 위험)', '현재 가용 공급량은 최대 70%입니다.', `해당 구역(${sector.name}, ${sector.req}%)을 송전하면 총 할당량이 ${g.allocated + sector.req}%가 되어 전체 송전망이 셧다운(Blackout)됩니다! 다른 구역의 전력을 차단하거나 우선순위를 재조정하세요.`);
+          playTone(200, 'sawtooth', 0.25);
+          return;
+        }
+        sector.on = true;
+        g.allocated += sector.req;
+        playTone(550, 'sine', 0.1);
+      }
+      updateGridUI();
+    }
+
+    function updateGridUI() {
+      const g = state.gridGame;
+      document.getElementById('grid-allocated-val').innerText = `${g.allocated} % / 70%`;
+      document.getElementById('grid-allocated-bar').style.width = `${(g.allocated / 70) * 100}%`;
+
+      g.sectors.forEach((sec, i) => {
+        const btn = document.getElementById(`sector-btn-${i}`);
+        if (sec.on) {
+          btn.className = 'w-full py-2 rounded-lg font-bold text-xs bg-emerald-500 text-white shadow-md shadow-emerald-500/30 transition flex items-center justify-center gap-1.5';
+          btn.innerHTML = `<i class="fa-solid fa-bolt"></i> <span>송전 ON (${sec.req}%)</span>`;
+        } else {
+          btn.className = 'w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center gap-1.5';
+          btn.innerHTML = `<i class="fa-solid fa-power-off"></i> <span>송전 OFF</span>`;
+        }
+      });
+    }
+
+    function submitGridDecision(isTimeOver = false) {
+      const g = state.gridGame;
+      if (g.timerInterval) clearInterval(g.timerInterval);
+      g.running = false;
+      document.getElementById('grid-start-btn').classList.remove('opacity-50', 'pointer-events-none');
+
+      const hosp = g.sectors[0].on;
+      const dataCenter = g.sectors[1].on;
+      const school = g.sectors[2].on;
+      const factory = g.sectors[3].on;
+
+      let score = 0;
+      let reviewHtml = '';
+
+      if (hosp) {
+        score += 35;
+        reviewHtml += `<div class="p-2 rounded bg-emerald-950/50 border border-emerald-800 text-emerald-300">✔ <strong>종합병원 송전 성공</strong>: 중환자실 및 응급 수술실의 생명 유지 시스템이 안전하게 유지되었습니다.</div>`;
+      } else {
+        reviewHtml += `<div class="p-2 rounded bg-rose-950/50 border border-rose-800 text-rose-300">✖ <strong>종합병원 송전 차단</strong>: 비상발전기(40분) 한계에 도달하면 즉각적인 인명 피해 위험이 발생합니다. 최우선권 고려가 필수적입니다.</div>`;
+      }
+
+      if (dataCenter) {
+        score += 30;
+        reviewHtml += `<div class="p-2 rounded bg-blue-950/50 border border-blue-800 text-blue-300">✔ <strong>데이터센터 송전 성공</strong>: 119 긴급 통신망과 결제 인프라가 생존하여 도시 마비 2차 패닉을 방어했습니다.</div>`;
+      } else {
+        reviewHtml += `<div class="p-2 rounded bg-amber-950/50 border border-amber-800 text-amber-300">▲ <strong>데이터센터 차단</strong>: 스마트폰 먹통 및 긴급 신고 두절로 혼란이 가중되었습니다.</div>`;
+      }
+
+      if (school) {
+        score += 15;
+        reviewHtml += `<div class="p-2 rounded bg-emerald-950/50 border border-emerald-800 text-emerald-300">✔ <strong>학교/대피소 송전 성공</strong>: 1,200명 대피 노약자의 온열질환 피해를 예방했습니다.</div>`;
+      } else {
+        reviewHtml += `<div class="p-2 rounded bg-slate-900 border border-slate-800 text-slate-400">▲ <strong>학교/대피소 차단</strong>: 비상 조명만 켜진 채 대피자들이 무더위 속에 대기했습니다.</div>`;
+      }
+
+      if (factory) {
+        score += 20;
+        reviewHtml += `<div class="p-2 rounded bg-blue-950/50 border border-blue-800 text-blue-300">✔ <strong>반도체 공장 송전 성공</strong>: 수천억 원의 용광로 굳음 경제적 피해를 방어했습니다.</div>`;
+      } else {
+        reviewHtml += `<div class="p-2 rounded bg-slate-900 border border-slate-800 text-slate-400">▲ <strong>공장 가동 중단</strong>: 대규모 경제 손실이 발생했으나 시민의 생명과 통신을 우선했습니다.</div>`;
+      }
+
+      const totalHtml = `
+        <div class="space-y-3">
+          <div class="text-sm font-semibold text-slate-200">
+            총 할당 전력: <strong>${g.allocated}%</strong> / 70% | 관제 효율 점수: <strong class="text-cyan-400">${score}점</strong>
+          </div>
+          <div class="space-y-2 text-xs">
+            ${reviewHtml}
+          </div>
+          <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+            <strong>💡 교과 연계 통찰</strong>: "데이터는 사실을 더 선명하게 보여줄 뿐, 무엇을 우선할지는 기계가 대신 결정하지 않는다." 재생에너지의 간헐성 문제는 단순한 발전 기술을 넘어 <strong>윤리적 의사결정과 지능형 전력망(Smart Grid)</strong>의 중요성을 일깨웁니다.
+          </div>
+        </div>
+      `;
+
+      showModal(
+        isTimeOver ? '⏰ 제한시간 종료! 비상 관제 결과' : '도시 관제 결정 보고서',
+        '시스템 엔지니어링 & 윤리적 우선순위 평가',
+        totalHtml,
+        score >= 60 ? 'fa-solid fa-award text-emerald-400' : 'fa-solid fa-triangle-exclamation text-amber-400'
+      );
+    }
+
+    /* =========================================================================
+       8. Reflection & Seteuk Generator (학생부 세특)
+       ========================================================================= */
+    function autoFillRecordExample() {
+      document.getElementById('record-step1').value = '전기는 단순히 콘센트에서 흘러나오는 에너지고, 친환경 재생에너지를 많이 설치하기만 하면 미래 문제가 다 해결될 것이라고 생각했다.';
+      document.getElementById('record-step2').value = '발전 원리(전자기유도 vs 광전효과)를 직접 조작해보고, 19:00 피크 시간대 시뮬레이션을 통해 자연 에너지가 인간의 시간표와 일치하지 않는다는 간헐성 한계와 센서 기반 전력망 제어의 필연성을 분석했다.';
+      document.getElementById('record-step3').value = '전기공학의 핵심은 에너지를 단순히 많이 만드는 기술이 아니라, 필요한 순간에 맞추어 정보를 읽고(측정) 판단하여 배분하는(제어) 시스템 사고에 있음을 깨달았다.';
+      playTone(440, 'sine', 0.1);
+    }
+
+    function generateSeteukText() {
+      const s1 = document.getElementById('record-step1').value.trim();
+      const s2 = document.getElementById('record-step2').value.trim();
+      const s3 = document.getElementById('record-step3').value.trim();
+
+      if (!s1 || !s2 || !s3) {
+        showModal('작성 확인', '3단계를 모두 입력해주세요', '처음 생각, 결정적 근거, 지금의 통찰 3가지를 모두 채워야 입학사정관 및 세특 제출용 문안이 완성됩니다.');
+        return;
+      }
+
+      const combined = `[전기전자·에너지 변환 탐구] '전기는 자연의 힘인가, 인간의 발명인가'라는 질문에서 출발하여 물리 법칙과 전력망 제어 시스템을 융합 탐구함. 풍력·수력의 전자기 유도 원리와 태양광의 반도체 광전효과 변환 구조를 비교 분석하고, 19시 도시 전력 피크 상황의 간헐성 딜레마를 분석하여 발전의 난제가 단순 생산량이 아닌 실시간 수요·공급 맞춤 제어에 있음을 도출함. 데이터를 기반으로 필수 인프라 우선순위를 판별하는 폐루프 제어와 스마트 그리드의 필요성을 논리적으로 설명하며 공학적 시스템 사고와 기술 윤리적 관점을 균형 있게 확장함.`;
+
+      document.getElementById('seteuk-output-text').innerText = combined;
+      document.getElementById('seteuk-output-box').classList.remove('hidden');
+      playTone(600, 'triangle', 0.2);
+    }
+
+    function copyGeneratedSeteuk() {
+      const text = document.getElementById('seteuk-output-text').innerText;
+      copyToClipboardFallback(text, '학생부 세특 문안이 클립보드에 복사되었습니다.');
+    }
+
+    function copyTableText() {
+      const summary = `[재생에너지 및 화력 발전 변환 비교 정리표]
+1. 풍력 발전: 바람 (운동에너지) ➔ 날개 블레이드 회전 ➔ 풍력 터빈 & 발전기 ➔ 전기 (전자기 유도)
+2. 수력 발전: 물 (위치·운동에너지) ➔ 수차 회전운동 ➔ 수차 & 발전기 ➔ 전기 (유도 기전력)
+3. 태양광 발전: 빛 (광에너지) ➔ 광전효과 (전자 이동) ➔ 태양전지 (반도체 패널) ➔ 전기 (비회전 직류 생성)
+4. 화력 발전: 연료 (화학에너지) ➔ 연소 열 ➔ 증기 회전 ➔ 증기 터빈 & 발전기 ➔ 전기 (대용량/CO2 배출)`;
+
+      copyToClipboardFallback(summary, '정리표 텍스트가 클립보드에 복사되었습니다.');
+    }
+
+    function copyToClipboardFallback(text, successMsg) {
+      const tempInput = document.createElement('textarea');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        showModal('복사 완료', '클립보드 저장 성공', successMsg, 'fa-regular fa-clipboard text-cyan-400');
+        playTone(660, 'sine', 0.15);
+      } catch (err) {
+        showModal('복사 실패', '브라우저 권한 안내', '직접 텍스트를 선택하여 복사해 주세요.');
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    /* =========================================================================
+       9. Window Onload Initialization
+       ========================================================================= */
+    window.onload = function () {
+      resizeCanvas();
+      updateSimUI();
+      renderSimulation();
+      loadChallenge('wind');
+    };
+  </script>
+</body>
+</html>

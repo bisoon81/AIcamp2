@@ -276,24 +276,26 @@
     <!-- ========================================================================= -->
     <!-- TAB 2: 에너지 변환 단계 조립 챌린지 (Drag & Drop / Match) -->
     <!-- ========================================================================= -->
-    <section id="section-quiz" class="hidden space-y-6">
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <section id="section-quiz" class="hidden space-y-4 sm:space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
           <div>
             <div class="text-xs font-semibold text-cyan-400 flex items-center gap-1.5 uppercase">
-              <i class="fa-solid fa-puzzle-piece"></i> 학생 주도적 탐구 활동
+              <i class="fa-solid fa-mobile-screen-button sm:hidden"></i>
+              <i class="fa-solid fa-puzzle-piece hidden sm:inline"></i>
+              <span>학생 주도적 탐구 활동 (모바일 터치 지원)</span>
             </div>
-            <h2 class="text-xl font-bold text-white tracking-tight mt-1">
+            <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight mt-1">
               에너지 변환 파이프라인 조립 챌린지
             </h2>
-            <p class="text-xs text-slate-300 mt-1">
-              각 발전 방식의 4단계 <strong>[초기 자연 에너지] ➔ [중간 변환 과정] ➔ [핵심 부품 및 장치] ➔ [최종 형태]</strong>를 올바른 순서로 연결하세요.
+            <p class="text-[11px] sm:text-xs text-slate-300 mt-1">
+              카드를 <strong>터치</strong>하거나 <strong>손가락으로 드래그</strong>하여 1~4단계 순서대로 연결하세요.
             </p>
           </div>
           <!-- Generation Target Selector -->
           <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400">대상 발전:</span>
-            <select id="challenge-type-select" onchange="loadChallenge(this.value)" class="bg-slate-950 border border-slate-700 text-white text-xs font-semibold rounded-lg px-3 py-2 outline-none focus:border-cyan-400">
+            <span class="text-xs text-slate-400 shrink-0">대상 발전:</span>
+            <select id="challenge-type-select" onchange="loadChallenge(this.value)" class="w-full sm:w-auto bg-slate-950 border border-slate-700 text-white text-xs font-semibold rounded-lg px-3 py-2 outline-none focus:border-cyan-400">
               <option value="wind">풍력 발전 (Wind Power)</option>
               <option value="hydro">수력 발전 (Hydroelectric)</option>
               <option value="solar">태양광 발전 (Solar Photovoltaic)</option>
@@ -303,96 +305,98 @@
         </div>
 
         <!-- Interactive Drag / Click Drop Zone Grid -->
-        <div class="pt-6 space-y-6">
+        <div class="pt-4 sm:pt-6 space-y-4 sm:space-y-6">
           <!-- Step Slots (Target Zones) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
             <!-- Slot 1 -->
-            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-4 min-h-[140px] flex flex-col justify-between transition-all" id="slot-0" ondragover="allowDrop(event)" ondrop="handleDrop(event, 0)">
-              <div class="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-800 pb-2">
-                <span>1단계 : 초기 자연 에너지</span>
-                <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px]">1</span>
+            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-3 sm:p-4 min-h-[115px] sm:min-h-[140px] flex flex-col justify-between transition-all cursor-pointer relative select-none" id="slot-0" onclick="handleSlotClick(0)" ondragover="allowDrop(event)" ondrop="handleDrop(event, 0)">
+              <div class="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 font-semibold border-b border-slate-800 pb-1.5">
+                <span class="truncate">1. 초기 자연 에너지</span>
+                <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] shrink-0">1</span>
               </div>
-              <div class="slot-content py-3 text-center text-slate-500 text-xs italic">
-                아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요
+              <div class="slot-content py-2 text-center text-slate-500 text-[11px] sm:text-xs">
+                터치 또는 드래그
               </div>
-              <div class="slot-footer text-right text-[11px] font-mono text-cyan-400 hidden"></div>
+              <div class="slot-footer text-right text-[10px] sm:text-[11px] font-mono text-cyan-400 hidden"></div>
             </div>
 
             <!-- Slot 2 -->
-            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-4 min-h-[140px] flex flex-col justify-between transition-all" id="slot-1" ondragover="allowDrop(event)" ondrop="handleDrop(event, 1)">
-              <div class="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-800 pb-2">
-                <span>2단계 : 중간 변환 과정</span>
-                <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px]">2</span>
+            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-3 sm:p-4 min-h-[115px] sm:min-h-[140px] flex flex-col justify-between transition-all cursor-pointer relative select-none" id="slot-1" onclick="handleSlotClick(1)" ondragover="allowDrop(event)" ondrop="handleDrop(event, 1)">
+              <div class="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 font-semibold border-b border-slate-800 pb-1.5">
+                <span class="truncate">2. 중간 변환 과정</span>
+                <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] shrink-0">2</span>
               </div>
-              <div class="slot-content py-3 text-center text-slate-500 text-xs italic">
-                아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요
+              <div class="slot-content py-2 text-center text-slate-500 text-[11px] sm:text-xs">
+                터치 또는 드래그
               </div>
-              <div class="slot-footer text-right text-[11px] font-mono text-cyan-400 hidden"></div>
+              <div class="slot-footer text-right text-[10px] sm:text-[11px] font-mono text-cyan-400 hidden"></div>
             </div>
 
             <!-- Slot 3 -->
-            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-4 min-h-[140px] flex flex-col justify-between transition-all" id="slot-2" ondragover="allowDrop(event)" ondrop="handleDrop(event, 2)">
-              <div class="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-800 pb-2">
-                <span>3단계 : 핵심 부품 및 장치</span>
-                <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px]">3</span>
+            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-3 sm:p-4 min-h-[115px] sm:min-h-[140px] flex flex-col justify-between transition-all cursor-pointer relative select-none" id="slot-2" onclick="handleSlotClick(2)" ondragover="allowDrop(event)" ondrop="handleDrop(event, 2)">
+              <div class="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 font-semibold border-b border-slate-800 pb-1.5">
+                <span class="truncate">3. 핵심 부품 및 장치</span>
+                <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] shrink-0">3</span>
               </div>
-              <div class="slot-content py-3 text-center text-slate-500 text-xs italic">
-                아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요
+              <div class="slot-content py-2 text-center text-slate-500 text-[11px] sm:text-xs">
+                터치 또는 드래그
               </div>
-              <div class="slot-footer text-right text-[11px] font-mono text-cyan-400 hidden"></div>
+              <div class="slot-footer text-right text-[10px] sm:text-[11px] font-mono text-cyan-400 hidden"></div>
             </div>
 
             <!-- Slot 4 -->
-            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-4 min-h-[140px] flex flex-col justify-between transition-all" id="slot-3" ondragover="allowDrop(event)" ondrop="handleDrop(event, 3)">
-              <div class="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-800 pb-2">
-                <span>4단계 : 최종 형태</span>
-                <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px]">4</span>
+            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-3 sm:p-4 min-h-[115px] sm:min-h-[140px] flex flex-col justify-between transition-all cursor-pointer relative select-none" id="slot-3" onclick="handleSlotClick(3)" ondragover="allowDrop(event)" ondrop="handleDrop(event, 3)">
+              <div class="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 font-semibold border-b border-slate-800 pb-1.5">
+                <span class="truncate">4. 최종 형태</span>
+                <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] shrink-0">4</span>
               </div>
-              <div class="slot-content py-3 text-center text-slate-500 text-xs italic">
-                아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요
+              <div class="slot-content py-2 text-center text-slate-500 text-[11px] sm:text-xs">
+                터치 또는 드래그
               </div>
-              <div class="slot-footer text-right text-[11px] font-mono text-cyan-400 hidden"></div>
+              <div class="slot-footer text-right text-[10px] sm:text-[11px] font-mono text-cyan-400 hidden"></div>
             </div>
           </div>
 
           <!-- Card Pool (Choices) -->
-          <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-3">
+          <div class="bg-slate-950/50 p-3 sm:p-4 rounded-xl border border-slate-800 space-y-2.5">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-300">
-                <i class="fa-solid fa-hand-pointer text-cyan-400 mr-1.5"></i> 선택 가능한 블록 카드 (클릭하여 빈 슬롯에 채우기)
+              <span class="text-[11px] sm:text-xs font-bold text-slate-300">
+                <i class="fa-solid fa-hand-pointer text-cyan-400 mr-1"></i>
+                <span class="hidden sm:inline">선택 가능한 블록 카드 (터치하여 빈 슬롯에 자동 채우기)</span>
+                <span class="sm:hidden">카드 터치하여 슬롯 채우기</span>
               </span>
-              <button onclick="resetCurrentChallenge()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition">
-                <i class="fa-solid fa-arrow-rotate-right"></i> 다시 배치하기
+              <button onclick="resetCurrentChallenge()" class="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 transition">
+                <i class="fa-solid fa-arrow-rotate-right"></i> 다시 배치
               </button>
             </div>
-            <div id="card-pool" class="flex flex-wrap gap-2.5">
+            <div id="card-pool" class="flex flex-wrap gap-2 sm:gap-2.5">
               <!-- Cards dynamically inserted by JS -->
             </div>
           </div>
 
           <!-- Challenge Control Action Bar (Always Visible) -->
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-slate-950/70 rounded-xl border border-slate-800">
-            <div class="text-xs text-slate-400 flex items-center gap-2">
-              <i class="fa-solid fa-circle-info text-cyan-400"></i>
-              <span>1~4단계를 모두 올바르게 조립하면 <strong>완성 축하 팝업</strong>이 즉시 나타납니다.</span>
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 sm:p-3.5 bg-slate-950/70 rounded-xl border border-slate-800">
+            <div class="text-[11px] sm:text-xs text-slate-400 flex items-center gap-2">
+              <i class="fa-solid fa-circle-info text-cyan-400 shrink-0"></i>
+              <span>1~4단계를 모두 맞추면 <strong>완성 축하 팝업</strong>이 나타납니다.</span>
             </div>
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <button onclick="resetCurrentChallenge()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition flex items-center gap-1.5">
+              <button onclick="resetCurrentChallenge()" class="w-1/2 sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition flex items-center justify-center gap-1.5 active:scale-95">
                 <i class="fa-solid fa-rotate-left"></i> <span>초기화</span>
               </button>
-              <button onclick="checkChallengeAnswer()" id="quiz-check-btn" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white shadow-md shadow-cyan-500/20 transition flex items-center gap-2">
+              <button onclick="checkChallengeAnswer()" id="quiz-check-btn" class="w-1/2 sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white shadow-md shadow-cyan-500/20 transition flex items-center justify-center gap-2 active:scale-95">
                 <i class="fa-solid fa-circle-check"></i> <span>정답 검증하기</span>
               </button>
             </div>
           </div>
 
           <!-- Result & Feedback Banner -->
-          <div id="quiz-result-banner" class="hidden p-4 rounded-xl border text-sm transition-all flex items-center justify-between">
+          <div id="quiz-result-banner" class="hidden p-3.5 sm:p-4 rounded-xl border text-xs sm:text-sm transition-all flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div id="quiz-result-icon" class="text-xl"></div>
+              <div id="quiz-result-icon" class="text-xl sm:text-2xl shrink-0"></div>
               <div>
-                <h4 id="quiz-result-title" class="font-bold"></h4>
-                <p id="quiz-result-desc" class="text-xs opacity-90"></p>
+                <h4 id="quiz-result-title" class="font-bold text-xs sm:text-sm"></h4>
+                <p id="quiz-result-desc" class="text-[11px] sm:text-xs opacity-90 mt-0.5"></p>
               </div>
             </div>
           </div>
@@ -1667,9 +1671,11 @@
     };
 
     let userSlotAnswers = [null, null, null, null];
+    let selectedSlotTarget = null; // 학생이 모바일에서 특정 슬롯을 먼저 터치했을 때 활성화
 
     function loadChallenge(type) {
       userSlotAnswers = [null, null, null, null];
+      selectedSlotTarget = null;
       for (let i = 0; i < 4; i++) {
         renderSlot(i, null);
       }
@@ -1684,28 +1690,166 @@
       pool.innerHTML = '';
       allCards.forEach(txt => {
         const card = document.createElement('div');
-        card.className = 'quiz-card px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-slate-200 cursor-pointer shadow transition transform hover:-translate-y-0.5';
-        card.innerText = txt;
+        card.className = 'quiz-card px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-slate-200 cursor-pointer shadow transition active:scale-95 touch-manipulation flex items-center gap-1.5 select-none';
+        card.setAttribute('data-card-text', txt);
+        card.innerHTML = `<span>${txt}</span>`;
         card.draggable = true;
+
+        // Desktop HTML5 drag
         card.ondragstart = (e) => e.dataTransfer.setData('text/plain', txt);
-        card.onclick = () => assignCardToFirstEmptySlot(txt);
+
+        // Mobile touch drag engine
+        attachMobileTouchEvents(card, txt);
+
+        // Click / Tap handler
+        card.onclick = (e) => {
+          e.stopPropagation();
+          assignCardToSlot(txt);
+        };
+
         pool.appendChild(card);
+      });
+      syncCardPoolState();
+    }
+
+    // 모바일 터치 드래그 지원 엔진
+    let touchGhostEl = null;
+    let draggingCardText = null;
+
+    function attachMobileTouchEvents(el, txt) {
+      let touchMoved = false;
+
+      el.addEventListener('touchstart', (e) => {
+        touchMoved = false;
+        draggingCardText = txt;
+        const touch = e.touches[0];
+
+        // Create Ghost Element
+        touchGhostEl = document.createElement('div');
+        touchGhostEl.className = 'fixed z-50 pointer-events-none px-3 py-2 rounded-xl bg-cyan-900/90 text-white font-bold text-xs border border-cyan-400 shadow-2xl opacity-90 -translate-x-1/2 -translate-y-1/2';
+        touchGhostEl.innerText = txt;
+        touchGhostEl.style.left = `${touch.clientX}px`;
+        touchGhostEl.style.top = `${touch.clientY}px`;
+        touchGhostEl.style.display = 'none';
+        document.body.appendChild(touchGhostEl);
+      }, { passive: true });
+
+      el.addEventListener('touchmove', (e) => {
+        touchMoved = true;
+        if (!touchGhostEl) return;
+        const touch = e.touches[0];
+        touchGhostEl.style.display = 'block';
+        touchGhostEl.style.left = `${touch.clientX}px`;
+        touchGhostEl.style.top = `${touch.clientY}px`;
+
+        // Highlight hovered slot
+        const elemUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+        const hoveredSlot = elemUnder ? elemUnder.closest('.quiz-slot') : null;
+        document.querySelectorAll('.quiz-slot').forEach(s => s.classList.remove('ring-2', 'ring-cyan-400'));
+        if (hoveredSlot) {
+          hoveredSlot.classList.add('ring-2', 'ring-cyan-400');
+        }
+      }, { passive: true });
+
+      el.addEventListener('touchend', (e) => {
+        document.querySelectorAll('.quiz-slot').forEach(s => s.classList.remove('ring-2', 'ring-cyan-400'));
+        if (touchGhostEl) {
+          touchGhostEl.remove();
+          touchGhostEl = null;
+        }
+
+        if (touchMoved) {
+          const touch = e.changedTouches[0];
+          const elemUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+          const dropSlot = elemUnder ? elemUnder.closest('.quiz-slot') : null;
+          if (dropSlot) {
+            const slotIdx = parseInt(dropSlot.id.replace('slot-', ''), 10);
+            if (!isNaN(slotIdx)) {
+              userSlotAnswers[slotIdx] = draggingCardText;
+              renderSlot(slotIdx, draggingCardText);
+              playTone(450 + slotIdx * 60, 'sine', 0.1);
+              syncCardPoolState();
+              if (!userSlotAnswers.includes(null)) {
+                setTimeout(() => checkChallengeAnswer(), 200);
+              }
+              return;
+            }
+          }
+        }
       });
     }
 
-    function assignCardToFirstEmptySlot(cardText) {
-      const emptyIdx = userSlotAnswers.findIndex(ans => ans === null);
-      if (emptyIdx !== -1) {
-        userSlotAnswers[emptyIdx] = cardText;
-        renderSlot(emptyIdx, cardText);
-        playTone(400 + emptyIdx * 80, 'sine', 0.1);
+    // 카드 풀 상태 동기화 (이미 사용된 카드는 회색/체크 표시)
+    function syncCardPoolState() {
+      const cards = document.querySelectorAll('#card-pool .quiz-card');
+      cards.forEach(c => {
+        const text = c.getAttribute('data-card-text');
+        const isUsed = userSlotAnswers.includes(text);
+        if (isUsed) {
+          c.classList.add('opacity-40', 'pointer-events-none', 'bg-slate-950', 'border-slate-800');
+          c.classList.remove('bg-slate-900', 'border-slate-700', 'hover:border-cyan-400');
+          if (!c.querySelector('.fa-check')) {
+            const check = document.createElement('i');
+            check.className = 'fa-solid fa-check text-cyan-400 text-[10px] ml-1';
+            c.appendChild(check);
+          }
+        } else {
+          c.classList.remove('opacity-40', 'pointer-events-none', 'bg-slate-950', 'border-slate-800');
+          c.classList.add('bg-slate-900', 'border-slate-700', 'hover:border-cyan-400');
+          const check = c.querySelector('.fa-check');
+          if (check) check.remove();
+        }
+      });
+    }
+
+    // 스마트폰 탭 방식 카드 배치 로직
+    function assignCardToSlot(cardText) {
+      let targetIdx = -1;
+
+      // 만약 학생이 특정 슬롯을 먼저 탭해두었다면 해당 슬롯에 넣기
+      if (selectedSlotTarget !== null) {
+        targetIdx = selectedSlotTarget;
+        selectedSlotTarget = null;
+      } else {
+        // 아니면 첫 번째 빈 슬롯 찾기
+        targetIdx = userSlotAnswers.findIndex(ans => ans === null);
+      }
+
+      if (targetIdx !== -1) {
+        userSlotAnswers[targetIdx] = cardText;
+        renderSlot(targetIdx, cardText);
+        playTone(400 + targetIdx * 80, 'sine', 0.1);
+        syncCardPoolState();
 
         // 4개 슬롯이 모두 채워지면 0.2초 후 자동 판정 및 완성 팝업 호출
         if (!userSlotAnswers.includes(null)) {
           setTimeout(() => checkChallengeAnswer(), 200);
         }
       } else {
-        showModal('모든 슬롯이 채워졌습니다', '슬롯을 비우려면 슬롯 카드를 클릭하세요', '슬롯을 수정하려면 등록된 카드를 클릭하여 제거한 후 다시 선택하세요.');
+        showModal(
+          '모든 슬롯이 채워졌습니다',
+          '슬롯 카드를 터치하여 수정할 수 있습니다',
+          '이미 1~4단계가 모두 채워져 있습니다. 카드를 변경하려면 변경하고 싶은 슬롯을 터치하여 비운 뒤 새로운 카드를 선택하세요.'
+        );
+      }
+    }
+
+    // 모바일 슬롯 터치 핸들러
+    function handleSlotClick(idx) {
+      if (userSlotAnswers[idx]) {
+        // 이미 카드가 들어있으면 해당 카드를 슬롯에서 제거
+        removeSlot(idx);
+      } else {
+        // 비어있는 슬롯을 터치하면 '타겟 슬롯'으로 활성화 (하이라이트)
+        selectedSlotTarget = idx;
+        document.querySelectorAll('.quiz-slot').forEach((s, sIdx) => {
+          if (sIdx === idx) {
+            s.classList.add('border-cyan-400', 'ring-2', 'ring-cyan-400/50');
+          } else if (!userSlotAnswers[sIdx]) {
+            s.classList.remove('border-cyan-400', 'ring-2', 'ring-cyan-400/50');
+          }
+        });
+        playTone(320, 'sine', 0.08);
       }
     }
 
@@ -1714,21 +1858,23 @@
       const content = slot.querySelector('.slot-content');
       const footer = slot.querySelector('.slot-footer');
 
+      slot.classList.remove('ring-2', 'ring-cyan-400/50');
+
       if (cardText) {
         slot.classList.remove('border-dashed', 'border-slate-700');
         slot.classList.add('border-solid', 'border-cyan-400', 'bg-cyan-950/20');
         content.innerHTML = `
-          <div class="text-sm font-bold text-white bg-slate-900 p-2.5 rounded-lg border border-cyan-500/50 flex items-center justify-between cursor-pointer" onclick="removeSlot(${idx})" title="클릭하여 제거">
-            <span>${cardText}</span>
-            <i class="fa-solid fa-xmark text-slate-400 hover:text-rose-400 text-xs"></i>
+          <div class="text-xs sm:text-sm font-bold text-white bg-slate-900 p-2 sm:p-2.5 rounded-lg border border-cyan-500/50 flex items-center justify-between shadow-sm">
+            <span class="truncate pr-1">${cardText}</span>
+            <i class="fa-solid fa-xmark text-slate-400 hover:text-rose-400 text-xs shrink-0"></i>
           </div>
         `;
         footer.classList.remove('hidden');
-        footer.innerText = '클릭 시 취소';
+        footer.innerText = '터치 시 취소';
       } else {
         slot.classList.remove('border-solid', 'border-cyan-400', 'border-emerald-400', 'border-rose-400', 'bg-cyan-950/20');
         slot.classList.add('border-dashed', 'border-slate-700');
-        content.innerHTML = `아래 카드에서 알맞은 항목을 클릭하거나 드래그하세요`;
+        content.innerHTML = `<span class="text-slate-500 text-[11px] sm:text-xs">터치 또는 드래그</span>`;
         footer.classList.add('hidden');
       }
     }
@@ -1736,6 +1882,8 @@
     function removeSlot(idx) {
       userSlotAnswers[idx] = null;
       renderSlot(idx, null);
+      selectedSlotTarget = null;
+      syncCardPoolState();
       playTone(280, 'sine', 0.1);
       document.getElementById('quiz-result-banner').classList.add('hidden');
     }
@@ -1746,13 +1894,13 @@
 
     function handleDrop(e, slotIdx) {
       e.preventDefault();
-      const txt = e.dataTransfer.getData('text/plain');
+      const txt = e.dataTransfer ? e.dataTransfer.getData('text/plain') : null;
       if (txt) {
         userSlotAnswers[slotIdx] = txt;
         renderSlot(slotIdx, txt);
+        syncCardPoolState();
         playTone(490, 'sine', 0.1);
 
-        // 드롭으로 마지막 슬롯이 채워진 경우 자동 검증
         if (!userSlotAnswers.includes(null)) {
           setTimeout(() => checkChallengeAnswer(), 200);
         }

@@ -3,2257 +3,1142 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>에너지와 신호 인터랙티브 랩 | 재생에너지 발전과 스마트 전력망</title>
-  <!-- Tailwind CSS CDN -->
+  <title>가로등 하루 시뮬레이터 - 기후테크 탐구 실험실</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              cyan: '#06b6d4',
-              blue: '#3b82f6',
-              neon: '#10b981',
-              amber: '#f59e0b',
-              purple: '#8b5cf6',
-              dark: '#0b1120',
-              card: '#131e36',
-              border: '#1e293b'
-            }
-          },
-          animation: {
-            'spin-slow': 'spin 8s linear infinite',
-            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-          }
-        }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+    /* 태양광 패널 회전 중심축 */
+    .panel-pivot {
+      transform-origin: 50% 50%;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    /* 에너지 흐름 점선 애니메이션 */
+    @keyframes flowAnim {
+      to {
+        stroke-dashoffset: -20;
       }
     }
-  </script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
-    * {
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-      user-select: none;
+    .flow-line {
+      stroke-dasharray: 6 4;
+      animation: flowAnim 1.2s linear infinite;
     }
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
+    /* 슬라이더 커스텀 (터치 영역 확보 및 크기 반응형) */
+    input[type=range] {
+      touch-action: pan-y;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #2563eb;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      border: 2px solid #ffffff;
+    }
+    /* 스크롤바 미려화 */
+    .custom-scroll::-webkit-scrollbar {
       width: 6px;
-      height: 6px;
     }
-    ::-webkit-scrollbar-track {
-      background: #0b1120;
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
     }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(71, 85, 105, 0.7);
       border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-    }
-    .glow-cyan {
-      box-shadow: 0 0 20px -3px rgba(6, 182, 212, 0.4);
-    }
-    .glow-amber {
-      box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.4);
-    }
-    .glow-neon {
-      box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.4);
-    }
-    .canvas-container {
-      position: relative;
-      background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
     }
   </style>
 </head>
-<body class="bg-[#090d16] text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased select-none overflow-x-hidden">
 
-  <!-- Top Navigation Bar -->
-  <header class="border-b border-slate-800 bg-[#0c1322]/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-          <i class="fa-solid fa-bolt-lightning text-white text-lg"></i>
+  <!-- 반응형 헤더 (스마트폰/태블릿/크롬북 최적화) -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-30 px-3 sm:px-4 py-2 sm:py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950 font-black text-lg sm:text-xl shrink-0">
+          ☀️
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/60">CLASS RE:BOOT</span>
-            <span class="text-xs text-slate-400 font-medium">고등학교 교과융합 탐구</span>
-          </div>
-          <h1 class="text-base lg:text-lg font-bold tracking-tight text-white flex items-center gap-2">
-            전기전자 : 신호가 세상을 연결한다
-            <span class="text-xs font-normal text-slate-400 hidden sm:inline">| 재생에너지 시뮬레이터</span>
+        <div class="truncate">
+          <h1 class="text-base sm:text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-1.5 truncate">
+            <span>가로등 하루 시뮬레이터</span>
+            <span class="text-xs font-normal text-slate-400 hidden md:inline">| 직결형 vs 독립형 비교 실습</span>
           </h1>
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="flex items-center gap-1.5 p-1 bg-slate-900/90 rounded-xl border border-slate-800/80 text-xs sm:text-sm font-medium">
-        <button onclick="switchTab('sim')" id="tab-btn-sim" class="tab-btn active px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 bg-cyan-500 text-white shadow-md shadow-cyan-500/20 font-semibold">
-          <i class="fa-solid fa-gauge-high"></i>
-          <span>발전 시뮬레이터</span>
-        </button>
-        <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200">
-          <i class="fa-solid fa-puzzle-piece"></i>
-          <span>에너지 변환 조립 챌린지</span>
-        </button>
-        <button onclick="switchTab('grid')" id="tab-btn-grid" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <span>19:00 전력 피크 위기</span>
-        </button>
-        <button onclick="switchTab('table')" id="tab-btn-table" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200">
-          <i class="fa-solid fa-table-list"></i>
-          <span>비교 정리 및 성찰</span>
-        </button>
-      </nav>
-
-      <!-- Audio / Help Tools -->
-      <div class="hidden sm:flex items-center gap-2">
-        <button onclick="toggleAudioFx()" id="audio-toggle" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 border border-slate-700 transition flex items-center gap-1.5" title="효과음 토글">
-          <i class="fa-solid fa-volume-high text-cyan-400" id="audio-icon"></i>
-          <span>효과음 ON</span>
-        </button>
-      </div>
+      <!-- 탐구 미션 상태 버튼 -->
+      <button id="missionToggleBtn" class="shrink-0 flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 text-xs sm:text-sm font-medium transition active:scale-95">
+        <span>📋 탐구 미션</span>
+        <span id="missionProgressBadge" class="bg-indigo-500 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-bold">0/3</span>
+      </button>
     </div>
   </header>
 
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-
-    <!-- ========================================================================= -->
-    <!-- TAB 1: 발전 시뮬레이터 (풍력, 수력, 태양광, 화력 비교) -->
-    <!-- ========================================================================= -->
-    <section id="section-sim" class="space-y-6">
-      <!-- Top Overview Banner -->
-      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-800 rounded-2xl p-5 lg:p-6 relative overflow-hidden shadow-xl">
-        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div class="space-y-1.5 max-w-3xl">
-            <div class="inline-flex items-center gap-2 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
-              <i class="fa-solid fa-arrows-spin"></i> 핵심 원리 : 에너지 보존과 형태 변환
-            </div>
-            <h2 class="text-xl lg:text-2xl font-bold text-white tracking-tight">
-              자연의 힘을 전기(신호)로 바꾸는 4가지 발전 방식
-            </h2>
-            <p class="text-sm text-slate-300 leading-relaxed">
-              풍력과 수력은 <strong>회전 운동에너지</strong>를 통해 <strong>전자기 유도</strong>를 일으키고, 태양광은 회전 없이 <strong>광전효과</strong>로 전자를 직접 이동시킵니다. 슬라이더를 조절하여 발전 과정을 관찰해보세요.
-            </p>
+  <main class="max-w-7xl mx-auto w-full p-2.5 sm:p-4 md:p-5 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4 lg:gap-5">
+    
+    <!-- 왼쪽/상단: 시뮬레이션 뷰포트 (7 cols) -->
+    <section class="lg:col-span-7 flex flex-col gap-3 sm:gap-4">
+      
+      <!-- 환경 애니메이션 스카이 캔버스 (화면비율 및 뷰포트 맞춤) -->
+      <div id="skyContainer" class="relative w-full h-[250px] xs:h-[280px] sm:h-[340px] md:h-[390px] lg:h-[410px] rounded-xl sm:rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl transition-all duration-700 bg-gradient-to-b from-sky-400 via-sky-200 to-amber-100">
+        
+        <!-- 날씨 오버레이 (구름 및 비 효과) -->
+        <div id="weatherOverlay" class="absolute inset-0 pointer-events-none transition-opacity duration-700 opacity-0 bg-slate-700/60 z-10 flex flex-col justify-between p-3 sm:p-6">
+          <div class="flex justify-between items-center text-slate-200 text-[10px] sm:text-xs font-semibold bg-slate-900/70 backdrop-blur px-2.5 py-1 rounded-full w-fit">
+            <span>☁️ 흐린 날씨 (일사량 70% 감소)</span>
           </div>
-          <!-- Mode Select Buttons -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800 shrink-0">
-            <button onclick="selectSimMode('wind')" id="sim-btn-wind" class="sim-mode-btn active px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-cyan-500 text-white shadow-md shadow-cyan-500/20">
-              <i class="fa-solid fa-wind text-sm"></i> 풍력 발전
-            </button>
-            <button onclick="selectSimMode('hydro')" id="sim-btn-hydro" class="sim-mode-btn px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
-              <i class="fa-solid fa-water text-sm"></i> 수력 발전
-            </button>
-            <button onclick="selectSimMode('solar')" id="sim-btn-solar" class="sim-mode-btn px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
-              <i class="fa-solid fa-sun text-sm"></i> 태양광 발전
-            </button>
-            <button onclick="selectSimMode('thermal')" id="sim-btn-thermal" class="sim-mode-btn px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
-              <i class="fa-solid fa-fire-flame-curved text-sm"></i> 화력 (비교)
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Interactive Visualizer & Controller Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Canvas Visualizer Card (7 cols) -->
-        <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col space-y-3 shadow-lg">
-          <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-xs">
-            <div class="flex items-center gap-2 text-cyan-400 font-semibold">
-              <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
-              <span id="canvas-status-title">풍력 발전 실시간 물리 시각화</span>
-            </div>
-            <div class="text-slate-400 flex items-center gap-3">
-              <span id="canvas-fps">60 FPS</span>
-              <span class="text-slate-600">|</span>
-              <span class="text-emerald-400 font-mono font-bold" id="telemetry-power-badge">발전 출력: 0 kW</span>
-            </div>
-          </div>
-
-          <!-- Simulation Canvas with Aspect Ratio Container -->
-          <div class="w-full h-72 sm:h-96 rounded-xl overflow-hidden canvas-container border border-slate-800/80 relative">
-            <canvas id="simCanvas" class="w-full h-full block"></canvas>
-
-            <!-- Dynamic Floating Overlay Badge -->
-            <div class="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs font-mono text-slate-300 pointer-events-none flex items-center gap-2">
-              <span class="text-cyan-400 font-bold" id="overlay-principle-badge">전자기 유도 (Faraday Law)</span>
-              <span class="text-slate-500">•</span>
-              <span id="overlay-dynamic-hint">바람 세기를 올려 전기를 생산하세요</span>
-            </div>
-          </div>
-
-          <!-- Bottom Step Pipeline Indicator -->
-          <div id="diagram-step-boxes" class="grid grid-cols-4 gap-2 pt-2 text-center text-xs">
-            <!-- Injected dynamically by JS -->
+          <!-- 구름 SVG 일러스트 -->
+          <div class="flex justify-around opacity-75">
+            <svg class="w-16 h-10 sm:w-28 sm:h-16 fill-slate-300/80 animate-pulse" viewBox="0 0 64 36"><path d="M54 28a10 10 0 0 0-8.8-14.7A14 14 0 0 0 18 20a10 10 0 0 0 2 19.8h34a10 10 0 0 0 0-11.8z"/></svg>
+            <svg class="w-24 h-14 sm:w-36 sm:h-20 fill-slate-200/90 animate-pulse" style="animation-delay: 1s;" viewBox="0 0 64 36"><path d="M54 28a10 10 0 0 0-8.8-14.7A14 14 0 0 0 18 20a10 10 0 0 0 2 19.8h34a10 10 0 0 0 0-11.8z"/></svg>
+            <svg class="w-16 h-10 sm:w-24 sm:h-14 fill-slate-300/70 animate-pulse" style="animation-delay: 2s;" viewBox="0 0 64 36"><path d="M54 28a10 10 0 0 0-8.8-14.7A14 14 0 0 0 18 20a10 10 0 0 0 2 19.8h34a10 10 0 0 0 0-11.8z"/></svg>
           </div>
         </div>
 
-        <!-- Controls & Measurement Panel (5 cols) -->
-        <div class="lg:col-span-5 flex flex-col space-y-4">
-          <!-- Parameter Controller Box -->
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-lg">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <!-- 손/가림막 오버레이: LED 전구(중앙 260px)와 겹치지 않도록 왼쪽 측면에 정렬 -->
+        <div id="blockageOverlay" class="absolute inset-0 pointer-events-none transition-all duration-300 opacity-0 z-20 flex items-center justify-start p-3 sm:p-5">
+          <div class="bg-slate-900/90 backdrop-blur-md border border-amber-500/60 rounded-xl p-3 sm:p-3.5 shadow-2xl scale-95 transition-transform max-w-[210px] sm:max-w-[240px] flex items-center gap-2.5 text-left border-l-4 border-l-amber-500" id="blockageBox">
+            <div class="text-2xl sm:text-3xl shrink-0 animate-bounce">✋</div>
+            <div class="min-w-0">
+              <div class="text-amber-300 font-bold text-xs sm:text-sm flex items-center gap-1">
+                <span>패널 차광(가림)</span>
+              </div>
+              <div class="text-[10px] sm:text-[11px] text-slate-300 leading-tight mt-0.5">
+                빛을 100% 차단 중입니다.<br>가로등 LED 반응을 확인하세요!
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 천체 궤적 (태양 & 달) -->
+        <div id="celestialTrack" class="absolute inset-0 pointer-events-none">
+          <!-- 태양 -->
+          <div id="sunEntity" class="absolute w-10 h-10 sm:w-14 sm:h-14 -ml-5 -mt-5 sm:-ml-7 sm:-mt-7 rounded-full bg-gradient-to-r from-amber-400 to-yellow-200 shadow-[0_0_30px_10px_rgba(251,191,36,0.7)] flex items-center justify-center transition-all duration-300">
+            <div class="w-6 h-6 sm:w-9 sm:h-9 rounded-full bg-amber-100/90 animate-ping opacity-25"></div>
+            <span class="absolute text-base sm:text-xl">☀️</span>
+          </div>
+          <!-- 달 -->
+          <div id="moonEntity" class="absolute w-9 h-9 sm:w-12 sm:h-12 -ml-4.5 -mt-4.5 sm:-ml-6 sm:-mt-6 rounded-full bg-slate-100 shadow-[0_0_20px_8px_rgba(255,255,255,0.4)] flex items-center justify-center transition-all duration-300">
+            <span class="text-sm sm:text-xl">🌙</span>
+          </div>
+        </div>
+
+        <!-- 가로등 및 풍경 SVG -->
+        <div class="absolute inset-0 flex items-end justify-center pointer-events-none">
+          <svg viewBox="0 0 600 400" class="w-full h-full preserve-3d" preserveAspectRatio="xMidYMax meet">
+            
+            <!-- 지면 및 길 -->
+            <path d="M 0 370 Q 300 365 600 370 L 600 400 L 0 400 Z" fill="#1e293b"/>
+            <path d="M 0 385 L 600 385" stroke="#475569" stroke-width="2" stroke-dasharray="10 15"/>
+            <circle cx="80" cy="375" r="4" fill="#334155"/>
+            <circle cx="520" cy="375" r="4" fill="#334155"/>
+            <!-- 원경 나무 실루엣 -->
+            <path d="M 50 370 L 70 310 L 90 370 Z" fill="#0f172a" opacity="0.6"/>
+            <path d="M 520 370 L 540 300 L 560 370 Z" fill="#0f172a" opacity="0.6"/>
+
+            <!-- LED 조명 빔 (라이트 콘) -->
+            <polygon id="lightBeam" points="260,165 150,375 370,375" fill="url(#lightGradient)" opacity="0" class="transition-opacity duration-300"/>
+
+            <!-- 그라데이션 정의 -->
+            <defs>
+              <linearGradient id="lightGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fef08a" stop-opacity="0.85"/>
+                <stop offset="60%" stop-color="#fef08a" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+              </linearGradient>
+              <radialGradient id="panelGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#0284c7" stop-opacity="0.4"/>
+              </radialGradient>
+            </defs>
+
+            <!-- 가로등 기둥 베이스 -->
+            <rect x="294" y="160" width="12" height="215" rx="3" fill="#64748b"/>
+            <rect x="286" y="365" width="28" height="10" rx="3" fill="#475569"/>
+
+            <!-- 회로 제어 박스 / 배터리함 (독립형일 때 강조) -->
+            <rect id="batteryBoxSvg" x="286" y="270" width="28" height="42" rx="4" fill="#334155" stroke="#64748b" stroke-width="2"/>
+            <text id="batteryBoxLabel" x="300" y="295" font-size="9" fill="#94a3b8" text-anchor="middle" font-weight="bold">배터리</text>
+
+            <!-- 가로등 램프 헤드 -->
+            <path d="M 294 175 C 294 150, 270 145, 260 152" fill="none" stroke="#64748b" stroke-width="6" stroke-linecap="round"/>
+            <path d="M 245 152 L 275 152 L 285 165 L 235 165 Z" fill="#334155"/>
+            <!-- 실제 발광 램프 구 -->
+            <ellipse id="ledBulb" cx="260" cy="165" rx="18" ry="6" fill="#64748b" class="transition-colors duration-300"/>
+
+            <!-- 태양광 패널 지지대 -->
+            <path d="M 300 160 L 300 115" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+            
+            <!-- 태양광 패널 어셈블리 (중심 회전) -->
+            <g id="solarPanelGroup" class="panel-pivot" style="transform-origin: 300px 115px; transform: rotate(0deg);">
+              <!-- 패널 프레임 -->
+              <rect x="235" y="107" width="130" height="16" rx="3" fill="#1e293b" stroke="#0ea5e9" stroke-width="2"/>
+              <!-- 솔라 셀 격자 라인 -->
+              <rect x="238" y="110" width="124" height="10" fill="#0369a1"/>
+              <line x1="262" y1="110" x2="262" y2="120" stroke="#bae6fd" stroke-width="1"/>
+              <line x1="287" y1="110" x2="287" y2="120" stroke="#bae6fd" stroke-width="1"/>
+              <line x1="312" y1="110" x2="312" y2="120" stroke="#bae6fd" stroke-width="1"/>
+              <line x1="337" y1="110" x2="337" y2="120" stroke="#bae6fd" stroke-width="1"/>
+              <!-- 발전 중 반사광 효과 -->
+              <rect id="panelGlowRect" x="238" y="110" width="124" height="10" fill="url(#panelGlow)" opacity="0"/>
+            </g>
+
+            <!-- 광선 / 에너지 입사선 표시 (낮에만 보임) -->
+            <g id="sunRaysGraphic" opacity="0" class="transition-opacity duration-300">
+              <line id="ray1" x1="0" y1="0" x2="270" y2="110" stroke="#fef08a" stroke-width="2" stroke-dasharray="4 4"/>
+              <line id="ray2" x1="0" y1="0" x2="300" y2="110" stroke="#fef08a" stroke-width="2" stroke-dasharray="4 4"/>
+              <line id="ray3" x1="0" y1="0" x2="330" y2="110" stroke="#fef08a" stroke-width="2" stroke-dasharray="4 4"/>
+            </g>
+          </svg>
+        </div>
+
+        <!-- 상단 반응형 통합 HUD 오버레이 -->
+        <div class="absolute top-2 inset-x-2 sm:top-3 sm:inset-x-3 z-20 flex items-start justify-between gap-1.5 pointer-events-none">
+          <!-- 좌측: 시간 및 모드 -->
+          <div class="flex flex-col sm:flex-row gap-1 sm:gap-2 pointer-events-auto max-w-[65%]">
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-700/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium flex items-center gap-1 sm:gap-1.5 shadow-md w-fit">
+              <span class="text-slate-400 hidden xs:inline">시각:</span>
+              <span id="digitalClock" class="font-mono font-bold text-amber-300 text-xs sm:text-sm">12:00</span>
+              <span id="dayNightBadge" class="px-1 py-0.5 rounded text-[9px] sm:text-[10px] bg-amber-500/20 text-amber-300 whitespace-nowrap">낮</span>
+            </div>
+
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-700/80 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium flex items-center gap-1 shadow-md w-fit">
+              <span class="text-slate-400 hidden sm:inline">모드:</span>
+              <span id="currentModeLabel" class="font-bold text-blue-400 truncate max-w-[120px] xs:max-w-none">직결형</span>
+            </div>
+          </div>
+
+          <!-- 우측: LED 상태 태그 -->
+          <div class="pointer-events-auto shrink-0">
+            <div id="ledStatusTag" class="bg-slate-900/90 backdrop-blur border border-slate-700 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl shadow-lg flex items-center gap-1.5 sm:gap-2">
+              <span id="ledStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
               <div>
-                <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                  <i class="fa-solid fa-sliders text-cyan-400"></i> 환경 매개변수 제어
-                </h3>
-                <span class="text-[11px] text-slate-400">슬라이더를 조작하거나 아래 프리셋을 눌러보세요</span>
+                <div class="text-[9px] text-slate-400 uppercase font-semibold leading-none hidden xs:block">LED</div>
+                <div id="ledStatusText" class="text-[10px] sm:text-xs font-bold text-slate-200 whitespace-nowrap">소등</div>
               </div>
-              <button onclick="resetSimParams()" class="text-xs text-slate-400 hover:text-cyan-400 flex items-center gap-1 transition">
-                <i class="fa-solid fa-rotate-left"></i> 기본값
-              </button>
-            </div>
-
-            <!-- Quick Environment Presets for Students -->
-            <div class="space-y-1.5">
-              <span class="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
-                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> 탐구 상황 빠른 프리셋:
-              </span>
-              <div id="sim-presets-container" class="grid grid-cols-3 gap-1.5">
-                <!-- Dynamically populated by JS based on simMode -->
-              </div>
-            </div>
-
-            <!-- Dynamic Slider 1 -->
-            <div class="space-y-1.5 pt-1">
-              <div class="flex justify-between items-center text-xs">
-                <label id="slider1-label" for="paramSlider1" class="text-slate-300 font-medium">바람의 세기 (풍속)</label>
-                <span id="slider1-val" class="font-mono font-bold text-cyan-400">12.0 m/s</span>
-              </div>
-              <input type="range" id="paramSlider1" min="0" max="30" step="0.5" value="12" class="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-800 rounded-lg">
-              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span id="slider1-min">0 m/s</span>
-                <span id="slider1-mid">15 m/s</span>
-                <span id="slider1-max">30 m/s (돌풍)</span>
-              </div>
-            </div>
-
-            <!-- Physics Quick Stats Grid -->
-            <div class="grid grid-cols-2 gap-2.5 pt-2">
-              <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-                <span class="text-[11px] text-slate-400 block" id="stat1-name">회전 속도 (RPM)</span>
-                <span class="text-base font-bold font-mono text-cyan-300" id="stat1-val">24.5 rpm</span>
-              </div>
-              <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-                <span class="text-[11px] text-slate-400 block" id="stat2-name">전자기 유도 기전력</span>
-                <span class="text-base font-bold font-mono text-emerald-400" id="stat2-val">380 V</span>
-              </div>
-              <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-                <span class="text-[11px] text-slate-400 block" id="stat3-name">에너지 변환 효율</span>
-                <span class="text-base font-bold font-mono text-amber-300" id="stat3-val">42.8 %</span>
-              </div>
-              <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-                <span class="text-[11px] text-slate-400 block" id="stat4-name">탄소 배출량 (CO₂)</span>
-                <span class="text-base font-bold font-mono text-slate-300" id="stat4-val">0.0 g/kWh</span>
-              </div>
-            </div>
-          </div>
-          <!-- Scientific Principle Explanation Box -->
-          <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/30 border border-slate-800 rounded-2xl p-5 space-y-2.5 shadow-lg flex-1">
-            <div class="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase">
-              <i class="fa-solid fa-graduation-cap"></i> 교과 연계 핵심 과학 원리
-            </div>
-            <h4 class="font-bold text-white text-sm" id="science-principle-title">
-              패러데이 전자기 유도 (Faraday's Induction)
-            </h4>
-            <p class="text-xs text-slate-300 leading-relaxed" id="science-principle-desc">
-              바람의 운동에너지가 날개를 회전시키면, 발전기 내부의 자석 또는 코일이 회전하면서 <strong>자기장의 변화(ΔΦ/Δt)</strong>를 만듭니다. 이 자속의 시간당 변화율에 비례하여 유도 기전력(전압)이 발생하고 전류가 유도됩니다.
-            </p>
-            <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-              <span id="science-equation">유도기전력 \( V = -N \frac{\Delta \Phi}{\Delta t} \)</span>
-              <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 font-mono font-medium" id="science-badge">물리학 I & 통합과학</span>
             </div>
           </div>
         </div>
+
       </div>
+
+      <!-- 발전량 및 배터리 계측 패널 (모바일 3열 콤팩트 카드 배치) -->
+      <div class="grid grid-cols-3 gap-2 sm:gap-3">
+        
+        <!-- 발전량 카드 -->
+        <div class="bg-slate-900 border border-slate-800 p-2 sm:p-3 rounded-xl flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[10px] sm:text-xs text-slate-400 mb-1">
+            <span class="truncate">⚡ 발전</span>
+            <span id="powerPercent" class="font-bold font-mono text-amber-400 shrink-0">0%</span>
+          </div>
+          <div class="w-full bg-slate-800 h-2 sm:h-2.5 rounded-full overflow-hidden my-0.5 sm:my-1">
+            <div id="powerBar" class="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-200" style="width: 0%"></div>
+          </div>
+          <div class="text-right text-[9px] sm:text-[11px] text-slate-400 font-mono truncate">
+            <span id="powerWatt" class="text-slate-200 font-semibold">0.0</span>W <span class="hidden sm:inline">/ 50W</span>
+          </div>
+        </div>
+
+        <!-- LED 출력 카드 -->
+        <div class="bg-slate-900 border border-slate-800 p-2 sm:p-3 rounded-xl flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[10px] sm:text-xs text-slate-400 mb-1">
+            <span class="truncate">💡 LED</span>
+            <span id="ledBrightPercent" class="font-bold font-mono text-yellow-300 shrink-0">0%</span>
+          </div>
+          <div class="w-full bg-slate-800 h-2 sm:h-2.5 rounded-full overflow-hidden my-0.5 sm:my-1">
+            <div id="ledBrightBar" class="h-full bg-yellow-400 rounded-full transition-all duration-200" style="width: 0%"></div>
+          </div>
+          <div class="text-right text-[9px] sm:text-[11px] text-slate-400 font-mono truncate">
+            <span id="ledLevelDesc" class="text-yellow-300 font-semibold">꺼짐</span>
+          </div>
+        </div>
+
+        <!-- 충전지 잔량 카드 (독립형 전용) -->
+        <div id="batteryCard" class="bg-slate-900 border border-slate-800 p-2 sm:p-3 rounded-xl flex flex-col justify-between transition-opacity duration-300">
+          <div class="flex items-center justify-between text-[10px] sm:text-xs text-slate-400 mb-1">
+            <span class="truncate">🔋 배터리</span>
+            <span id="batteryPercent" class="font-bold font-mono text-emerald-400 shrink-0">60%</span>
+          </div>
+          <div class="w-full bg-slate-800 h-2 sm:h-2.5 rounded-full overflow-hidden my-0.5 sm:my-1">
+            <div id="batteryBar" class="h-full bg-emerald-500 rounded-full transition-all duration-200" style="width: 60%"></div>
+          </div>
+          <div class="flex justify-between text-[9px] sm:text-[11px] text-slate-400 font-mono truncate">
+            <span id="batteryFlowState" class="truncate hidden sm:inline">대기 중</span>
+            <span id="batteryCapText" class="font-mono text-slate-300 ml-auto">60Wh</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 원리 설명 다이어그램 카드 -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 sm:p-3.5 text-xs text-slate-300 leading-relaxed">
+        <div class="font-bold text-slate-200 mb-1 flex items-center gap-1.5">
+          <span class="text-blue-400">ℹ️</span> <span id="principleTitle">직결형 동작 원리 (키트 모형)</span>
+        </div>
+        <p id="principleDesc" class="text-[11px] sm:text-xs text-slate-400">
+          태양광 패널과 LED가 배터리 없이 직접 연결되어 있습니다. 따라서 빛을 받으면 낮이라도 LED가 바로 켜지고, 구름이 끼거나 가리면 바로 어두워지거나 꺼집니다.
+        </p>
+      </div>
+
     </section>
 
-    <!-- ========================================================================= -->
-    <!-- TAB 2: 에너지 변환 단계 조립 챌린지 (Drag & Drop / Match) -->
-    <!-- ========================================================================= -->
-    <section id="section-quiz" class="hidden space-y-4 sm:space-y-6">
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-          <div>
-            <div class="text-xs font-semibold text-cyan-400 flex items-center gap-1.5 uppercase">
-              <i class="fa-solid fa-mobile-screen-button sm:hidden"></i>
-              <i class="fa-solid fa-puzzle-piece hidden sm:inline"></i>
-              <span>학생 주도적 탐구 활동 (모바일 터치 지원)</span>
-            </div>
-            <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight mt-1">
-              에너지 변환 파이프라인 조립 챌린지
-            </h2>
-            <p class="text-[11px] sm:text-xs text-slate-300 mt-1">
-              카드를 <strong>터치</strong>하거나 <strong>손가락으로 드래그</strong>하여 1~4단계 순서대로 연결하세요.
-            </p>
-          </div>
-          <!-- Generation Target Selector -->
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400 shrink-0">대상 발전:</span>
-            <select id="challenge-type-select" onchange="loadChallenge(this.value)" class="w-full sm:w-auto bg-slate-950 border border-slate-700 text-white text-xs font-semibold rounded-lg px-3 py-2 outline-none focus:border-cyan-400">
-              <option value="wind">풍력 발전 (Wind Power)</option>
-              <option value="hydro">수력 발전 (Hydroelectric)</option>
-              <option value="solar">태양광 발전 (Solar Photovoltaic)</option>
-              <option value="thermal">화력 발전 (Thermal Power)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Interactive Drag / Click Drop Zone Grid -->
-        <div class="pt-4 sm:pt-6 space-y-4 sm:space-y-6">
-          <!-- Step Slots (Target Zones) -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-            <!-- Slot 1 -->
-            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-3 sm:p-4 min-h-[115px] sm:min-h-[140px] flex flex-col justify-between transition-all cursor-pointer relative select-none" id="slot-0" onclick="handleSlotClick(0)" ondragover="allowDrop(event)" ondrop="handleDrop(event, 0)">
-              <div class="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 font-semibold border-b border-slate-800 pb-1.5">
-                <span class="truncate">1. 초기 자연 에너지</span>
-                <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] shrink-0">1</span>
-              </div>
-              <div class="slot-content py-2 text-center text-slate-500 text-[11px] sm:text-xs">
-                터치 또는 드래그
-              </div>
-              <div class="slot-footer text-right text-[10px] sm:text-[11px] font-mono text-cyan-400 hidden"></div>
-            </div>
-
-            <!-- Slot 2 -->
-            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-3 sm:p-4 min-h-[115px] sm:min-h-[140px] flex flex-col justify-between transition-all cursor-pointer relative select-none" id="slot-1" onclick="handleSlotClick(1)" ondragover="allowDrop(event)" ondrop="handleDrop(event, 1)">
-              <div class="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 font-semibold border-b border-slate-800 pb-1.5">
-                <span class="truncate">2. 중간 변환 과정</span>
-                <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] shrink-0">2</span>
-              </div>
-              <div class="slot-content py-2 text-center text-slate-500 text-[11px] sm:text-xs">
-                터치 또는 드래그
-              </div>
-              <div class="slot-footer text-right text-[10px] sm:text-[11px] font-mono text-cyan-400 hidden"></div>
-            </div>
-
-            <!-- Slot 3 -->
-            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-3 sm:p-4 min-h-[115px] sm:min-h-[140px] flex flex-col justify-between transition-all cursor-pointer relative select-none" id="slot-2" onclick="handleSlotClick(2)" ondragover="allowDrop(event)" ondrop="handleDrop(event, 2)">
-              <div class="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 font-semibold border-b border-slate-800 pb-1.5">
-                <span class="truncate">3. 핵심 부품 및 장치</span>
-                <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] shrink-0">3</span>
-              </div>
-              <div class="slot-content py-2 text-center text-slate-500 text-[11px] sm:text-xs">
-                터치 또는 드래그
-              </div>
-              <div class="slot-footer text-right text-[10px] sm:text-[11px] font-mono text-cyan-400 hidden"></div>
-            </div>
-
-            <!-- Slot 4 -->
-            <div class="quiz-slot bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-xl p-3 sm:p-4 min-h-[115px] sm:min-h-[140px] flex flex-col justify-between transition-all cursor-pointer relative select-none" id="slot-3" onclick="handleSlotClick(3)" ondragover="allowDrop(event)" ondrop="handleDrop(event, 3)">
-              <div class="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 font-semibold border-b border-slate-800 pb-1.5">
-                <span class="truncate">4. 최종 형태</span>
-                <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] shrink-0">4</span>
-              </div>
-              <div class="slot-content py-2 text-center text-slate-500 text-[11px] sm:text-xs">
-                터치 또는 드래그
-              </div>
-              <div class="slot-footer text-right text-[10px] sm:text-[11px] font-mono text-cyan-400 hidden"></div>
-            </div>
-          </div>
-
-          <!-- Card Pool (Choices) -->
-          <div class="bg-slate-950/50 p-3 sm:p-4 rounded-xl border border-slate-800 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] sm:text-xs font-bold text-slate-300">
-                <i class="fa-solid fa-hand-pointer text-cyan-400 mr-1"></i>
-                <span class="hidden sm:inline">선택 가능한 블록 카드 (터치하여 빈 슬롯에 자동 채우기)</span>
-                <span class="sm:hidden">카드 터치하여 슬롯 채우기</span>
-              </span>
-              <button onclick="resetCurrentChallenge()" class="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 transition">
-                <i class="fa-solid fa-arrow-rotate-right"></i> 다시 배치
-              </button>
-            </div>
-            <div id="card-pool" class="flex flex-wrap gap-2 sm:gap-2.5">
-              <!-- Cards dynamically inserted by JS -->
-            </div>
-          </div>
-
-          <!-- Challenge Control Action Bar (Always Visible) -->
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 sm:p-3.5 bg-slate-950/70 rounded-xl border border-slate-800">
-            <div class="text-[11px] sm:text-xs text-slate-400 flex items-center gap-2">
-              <i class="fa-solid fa-circle-info text-cyan-400 shrink-0"></i>
-              <span>1~4단계를 모두 맞추면 <strong>완성 축하 팝업</strong>이 나타납니다.</span>
-            </div>
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <button onclick="resetCurrentChallenge()" class="w-1/2 sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition flex items-center justify-center gap-1.5 active:scale-95">
-                <i class="fa-solid fa-rotate-left"></i> <span>초기화</span>
-              </button>
-              <button onclick="checkChallengeAnswer()" id="quiz-check-btn" class="w-1/2 sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white shadow-md shadow-cyan-500/20 transition flex items-center justify-center gap-2 active:scale-95">
-                <i class="fa-solid fa-circle-check"></i> <span>정답 검증하기</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Result & Feedback Banner -->
-          <div id="quiz-result-banner" class="hidden p-3.5 sm:p-4 rounded-xl border text-xs sm:text-sm transition-all flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div id="quiz-result-icon" class="text-xl sm:text-2xl shrink-0"></div>
-              <div>
-                <h4 id="quiz-result-title" class="font-bold text-xs sm:text-sm"></h4>
-                <p id="quiz-result-desc" class="text-[11px] sm:text-xs opacity-90 mt-0.5"></p>
-              </div>
-            </div>
-          </div>
+    <!-- 오른쪽: 컨트롤러 패널 (5 cols) -->
+    <section class="lg:col-span-5 flex flex-col gap-3 sm:gap-4">
+      
+      <!-- 1. 모드 선택 토글 세그먼트 -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
+        <label class="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+          가로등 구성 방식 (모드 전환)
+        </label>
+        <div class="grid grid-cols-2 gap-1.5 sm:gap-2 bg-slate-950 p-1 sm:p-1.5 rounded-xl border border-slate-800">
+          <button id="modeDirectBtn" class="py-2 sm:py-2.5 px-2 rounded-lg font-semibold text-xs transition flex flex-col items-center gap-0.5 sm:gap-1 bg-blue-600 text-white shadow-md active:scale-95">
+            <span class="truncate w-full text-center">직결형 (우리 모형)</span>
+            <span class="text-[9px] sm:text-[10px] font-normal opacity-80 truncate hidden xs:inline">패널 ➔ LED 직결</span>
+          </button>
+          <button id="modeStandaloneBtn" class="py-2 sm:py-2.5 px-2 rounded-lg font-semibold text-xs transition flex flex-col items-center gap-0.5 sm:gap-1 text-slate-400 hover:text-white active:scale-95">
+            <span class="truncate w-full text-center">독립형 (실제 가로등)</span>
+            <span class="text-[9px] sm:text-[10px] font-normal opacity-80 truncate hidden xs:inline">충전지 + 제어기</span>
+          </button>
         </div>
       </div>
-    </section>
 
-    <!-- ========================================================================= -->
-    <!-- TAB 3: 19:00 전력 피크 위기 해결 챌린지 (Smart Grid Crisis) -->
-    <!-- ========================================================================= -->
-    <section id="section-grid" class="hidden space-y-6">
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl relative overflow-hidden">
-        <!-- Emergency alert banner -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-full bg-rose-950 text-rose-400 border border-rose-800/80 text-xs font-bold flex items-center gap-1.5">
-                <i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 19:07 비상 경보 발령
-              </span>
-              <span class="text-xs text-slate-400">도시 전력망 관제 시뮬레이션</span>
-            </div>
-            <h2 class="text-xl font-extrabold text-white tracking-tight mt-1">
-              "태양은 지고 바람은 멈췄는데, 도시는 전기를 원한다"
-            </h2>
-            <p class="text-xs text-slate-300 mt-1 max-w-2xl">
-              폭염으로 인한 냉방 급증과 전기차 충전이 겹쳤습니다. 재생에너지 공급이 줄어든 순간, 
-              <strong>예비전력이 30% 급감</strong>했습니다. 90초 안에 우선 송전 구역을 결정하세요.
-            </p>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <div class="text-right">
-              <span class="text-[11px] text-slate-400 block font-mono">결정 제한시간</span>
-              <span id="grid-timer" class="text-2xl font-black font-mono text-rose-400">90.0초</span>
-            </div>
-            <button onclick="startGridEmergency()" id="grid-start-btn" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition flex items-center gap-1.5">
-              <i class="fa-solid fa-play"></i> <span>시뮬레이션 시작</span>
+      <!-- 2. 시간 조절 (24시간 타임라인 및 재생) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg flex flex-col gap-2.5 sm:gap-3">
+        <div class="flex items-center justify-between">
+          <label class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <span>⏰ 시간 제어 (아침 ➔ 밤 ➔ 아침)</span>
+          </label>
+          <div class="flex items-center gap-1.5">
+            <button id="playPauseBtn" class="px-2.5 sm:px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1 transition active:scale-95">
+              <span id="playIcon">▶</span> <span id="playText">재생</span>
+            </button>
+            <button id="speedBtn" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono transition active:scale-95">
+              1x
             </button>
           </div>
         </div>
 
-        <!-- Grid Status Gauge Bars -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800">
-            <div class="flex justify-between items-center text-xs mb-1">
-              <span class="text-slate-400">도시 총 전력 수요</span>
-              <span class="font-mono font-bold text-amber-400" id="grid-demand-val">100 % (과부하)</span>
-            </div>
-            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-              <div id="grid-demand-bar" class="h-full bg-amber-400 transition-all duration-300" style="width: 100%;"></div>
-            </div>
-            <span class="text-[10px] text-slate-500 mt-1 block">기온 38.7℃ | 에어컨 +11%</span>
+        <!-- 시간 슬라이더 -->
+        <div>
+          <div class="flex justify-between text-[10px] sm:text-xs font-mono text-slate-400 mb-1">
+            <span>06:00</span>
+            <span class="text-amber-400 font-bold">12:00 (정오)</span>
+            <span>18:00</span>
+            <span class="text-indigo-400">24:00</span>
+            <span>06:00</span>
           </div>
-
-          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800">
-            <div class="flex justify-between items-center text-xs mb-1">
-              <span class="text-slate-400">가용 공급 전력 (재생+예비)</span>
-              <span class="font-mono font-bold text-rose-400" id="grid-supply-val">70 % (부족)</span>
-            </div>
-            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-              <div id="grid-supply-bar" class="h-full bg-rose-500 transition-all duration-300" style="width: 70%;"></div>
-            </div>
-            <span class="text-[10px] text-slate-500 mt-1 block">일몰 후 태양광 제로 / 풍속 1.2m/s</span>
-          </div>
-
-          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800">
-            <div class="flex justify-between items-center text-xs mb-1">
-              <span class="text-slate-400">현재 할당된 전력</span>
-              <span class="font-mono font-bold text-cyan-400" id="grid-allocated-val">0 % / 70%</span>
-            </div>
-            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-              <div id="grid-allocated-bar" class="h-full bg-cyan-400 transition-all duration-300" style="width: 0%;"></div>
-            </div>
-            <span class="text-[10px] text-slate-500 mt-1 block">최대 70%까지 우선 배분 가능</span>
-          </div>
+          <input type="range" id="timeSlider" min="6" max="30" step="0.1" value="12" class="w-full h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500">
         </div>
 
-        <!-- 4 Critical Sectors Dispatch Controller -->
-        <div class="pt-4 space-y-3">
-          <h3 class="text-xs font-bold text-slate-300 flex items-center justify-between">
-            <span><i class="fa-solid fa-network-wired text-cyan-400 mr-1.5"></i> 4대 필수 도시 구역 송전 여부 선택</span>
-            <span class="text-slate-400 font-normal">각 구역의 요구 전력과 단절 리스크를 고려하여 스위치를 켜세요</span>
-          </h3>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Sector 1: Hospital -->
-            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
-              <div>
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-sm text-white flex items-center gap-1.5">
-                    <i class="fa-solid fa-hospital text-rose-400"></i> 종합병원
-                  </span>
-                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-rose-950 text-rose-300 border border-rose-800">18% 요구</span>
-                </div>
-                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                  수술실 및 중환자실 인공호흡기 가동 중. 정전 10초 시 생명 위험.
-                </p>
-                <div class="mt-2 text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">
-                  <i class="fa-solid fa-info-circle text-cyan-400"></i> 비상 발전기 40분 가동 가능
-                </div>
-              </div>
-              <button onclick="toggleSector(0)" id="sector-btn-0" class="w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition">
-                <i class="fa-solid fa-power-off mr-1"></i> <span>송전 OFF</span>
-              </button>
-            </div>
-
-            <!-- Sector 2: Data Center -->
-            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
-              <div>
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-sm text-white flex items-center gap-1.5">
-                    <i class="fa-solid fa-server text-blue-400"></i> 데이터센터
-                  </span>
-                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-blue-950 text-blue-300 border border-blue-800">22% 요구</span>
-                </div>
-                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                  국가 금융 결제망 및 전국 스마트폰 119 긴급 신고 통신망 연결.
-                </p>
-                <div class="mt-2 text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">
-                  <i class="fa-solid fa-info-circle text-cyan-400"></i> 통신 두절 시 도시 패닉 우려
-                </div>
-              </div>
-              <button onclick="toggleSector(1)" id="sector-btn-1" class="w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition">
-                <i class="fa-solid fa-power-off mr-1"></i> <span>송전 OFF</span>
-              </button>
-            </div>
-
-            <!-- Sector 3: School / Shelter -->
-            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
-              <div>
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-sm text-white flex items-center gap-1.5">
-                    <i class="fa-solid fa-school text-amber-400"></i> 학교 및 대피소
-                  </span>
-                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-amber-950 text-amber-300 border border-amber-800">12% 요구</span>
-                </div>
-                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                  야간 자율학습 학생 및 폭염 취약 노약자 1,200명 임시 대피 중.
-                </p>
-                <div class="mt-2 text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">
-                  <i class="fa-solid fa-info-circle text-cyan-400"></i> 체육관 에어컨 및 조명 필요
-                </div>
-              </div>
-              <button onclick="toggleSector(2)" id="sector-btn-2" class="w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition">
-                <i class="fa-solid fa-power-off mr-1"></i> <span>송전 OFF</span>
-              </button>
-            </div>
-
-            <!-- Sector 4: Industrial Plant -->
-            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
-              <div>
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-sm text-white flex items-center gap-1.5">
-                    <i class="fa-solid fa-industry text-purple-400"></i> 반도체 공장
-                  </span>
-                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-950 text-purple-300 border border-purple-800">28% 요구</span>
-                </div>
-                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                  용광로 및 클린룸 정지 시 재가동에 36시간 소요, 수천억 원 피해.
-                </p>
-                <div class="mt-2 text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">
-                  <i class="fa-solid fa-info-circle text-cyan-400"></i> 막대한 경제적 손실 위험
-                </div>
-              </div>
-              <button onclick="toggleSector(3)" id="sector-btn-3" class="w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition">
-                <i class="fa-solid fa-power-off mr-1"></i> <span>송전 OFF</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Evaluation Button & Debriefing Modal Container -->
-          <div class="flex justify-end pt-3">
-            <button onclick="submitGridDecision()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-bold text-xs text-white shadow-lg shadow-cyan-500/20 transition flex items-center gap-2">
-              <i class="fa-solid fa-gavel"></i> <span>최종 관제 결정 제출 및 평가</span>
-            </button>
-          </div>
+        <!-- 퀵 점프 버튼 -->
+        <div class="grid grid-cols-4 gap-1 sm:gap-1.5 pt-0.5">
+          <button class="time-quick-btn py-1.5 px-1 text-[10px] sm:text-[11px] rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center truncate active:scale-95" data-time="8">🌅 08시</button>
+          <button class="time-quick-btn py-1.5 px-1 text-[10px] sm:text-[11px] rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center truncate active:scale-95" data-time="12">☀️ 12시</button>
+          <button class="time-quick-btn py-1.5 px-1 text-[10px] sm:text-[11px] rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center truncate active:scale-95" data-time="19">🌆 19시</button>
+          <button class="time-quick-btn py-1.5 px-1 text-[10px] sm:text-[11px] rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center truncate active:scale-95" data-time="23">🌙 23시</button>
         </div>
       </div>
-    </section>
 
-    <!-- ========================================================================= -->
-    <!-- TAB 4: 비교 정리표 및 학생 성찰 리포트 (Review & Record) -->
-    <!-- ========================================================================= -->
-    <section id="section-table" class="hidden space-y-6">
-      <!-- Comparative Table Card -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <!-- 3. 환경 변수 조절 (날씨, 가림, 각도) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg flex flex-col gap-3">
+        <label class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">
+          환경 및 패널 조절 요소
+        </label>
+
+        <!-- 날씨 (맑음 / 흐림) -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
           <div>
-            <span class="text-xs font-semibold text-cyan-400 flex items-center gap-1.5 uppercase">
-              <i class="fa-solid fa-table-list"></i> 개념 종합 및 비교
-            </span>
-            <h2 class="text-lg font-bold text-white mt-1">
-              에너지 변환 단계 비교 정리표
-            </h2>
+            <div class="text-xs font-semibold text-slate-200">날씨 조건</div>
+            <div class="text-[10px] sm:text-[11px] text-slate-400">흐린 날은 일사량이 70% 감소합니다.</div>
           </div>
-          <button onclick="copyTableText()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 transition flex items-center gap-1.5 self-start sm:self-auto">
-            <i class="fa-regular fa-copy text-cyan-400"></i> 정리표 텍스트 복사
+          <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 shrink-0">
+            <button id="weatherClearBtn" class="px-2.5 sm:px-3 py-1 rounded-md text-xs font-bold transition bg-amber-500 text-slate-950 active:scale-95">☀️ 맑음</button>
+            <button id="weatherCloudyBtn" class="px-2.5 sm:px-3 py-1 rounded-md text-xs font-medium text-slate-400 hover:text-white transition active:scale-95">☁️ 흐림</button>
+          </div>
+        </div>
+
+        <!-- 패널 가림 토글 -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <div>
+            <div class="text-xs font-semibold text-slate-200">패널 가림 (차광)</div>
+            <div class="text-[10px] sm:text-[11px] text-slate-400">손/물체로 빛을 100% 차단합니다.</div>
+          </div>
+          <button id="blockageToggleBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold transition border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 active:scale-95">
+            가림 해제됨
           </button>
         </div>
 
-        <!-- Responsive Table Container -->
-        <div class="overflow-x-auto rounded-xl border border-slate-800">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="bg-slate-950 text-slate-400 border-b border-slate-800">
-                <th class="p-3 font-semibold">발전 구분</th>
-                <th class="p-3 font-semibold">초기 자연 에너지</th>
-                <th class="p-3 font-semibold">중간 변환 과정</th>
-                <th class="p-3 font-semibold">핵심 부품 및 장치</th>
-                <th class="p-3 font-semibold">최종 형태</th>
-                <th class="p-3 font-semibold">핵심 원리 및 특징</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-800 text-slate-300">
-              <tr class="hover:bg-slate-800/40 transition">
-                <td class="p-3 font-bold text-cyan-400 flex items-center gap-2">
-                  <i class="fa-solid fa-wind"></i> 풍력 발전
-                </td>
-                <td class="p-3">바람 (운동에너지)</td>
-                <td class="p-3">날개 블레이드 회전</td>
-                <td class="p-3 font-mono text-slate-200">풍력 터빈 & 발전기</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold">전기</span></td>
-                <td class="p-3 text-slate-400">바람의 세기 변화에 따라 <strong>전자기 유도</strong>로 전력 생산</td>
-              </tr>
-              <tr class="hover:bg-slate-800/40 transition">
-                <td class="p-3 font-bold text-blue-400 flex items-center gap-2">
-                  <i class="fa-solid fa-water"></i> 수력 발전
-                </td>
-                <td class="p-3">물 (위치·운동에너지)</td>
-                <td class="p-3">수차 회전운동</td>
-                <td class="p-3 font-mono text-slate-200">수차 & 발전기</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold">전기</span></td>
-                <td class="p-3 text-slate-400">낙차를 이용해 고속 회전시켜 <strong>유도 기전력</strong> 발생</td>
-              </tr>
-              <tr class="hover:bg-slate-800/40 transition">
-                <td class="p-3 font-bold text-amber-400 flex items-center gap-2">
-                  <i class="fa-solid fa-sun"></i> 태양광 발전
-                </td>
-                <td class="p-3">빛 (광에너지)</td>
-                <td class="p-3">광전효과 (전자 이동)</td>
-                <td class="p-3 font-mono text-slate-200">태양전지 (반도체 패널)</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold">전기</span></td>
-                <td class="p-3 text-slate-400"><strong class="text-amber-300">회전 장치 없이</strong> 반도체 내부 전하 분리로 직류 발생</td>
-              </tr>
-              <tr class="hover:bg-slate-800/40 transition bg-slate-950/40">
-                <td class="p-3 font-bold text-rose-400 flex items-center gap-2">
-                  <i class="fa-solid fa-fire-flame-curved"></i> (비교) 화력 발전
-                </td>
-                <td class="p-3">연료 (화학에너지)</td>
-                <td class="p-3">연소 열 ➔ 증기 회전</td>
-                <td class="p-3 font-mono text-slate-200">증기 터빈 & 발전기</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold">전기</span></td>
-                <td class="p-3 text-slate-400">온실가스(CO₂) 배출 수반, 인간 스케줄에 맞춘 가동 가능</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- 패널 각도 조절 -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <div class="text-xs font-semibold text-slate-200">패널 각도 조절</div>
+            <span id="angleValueLabel" class="text-xs font-mono font-bold text-sky-400">0° (수평)</span>
+          </div>
+          <div class="text-[10px] sm:text-[11px] text-slate-400 mb-2">
+            해를 향할수록 발전량이 늘어납니다 (태양 입사각 최적화).
+          </div>
+          <input type="range" id="angleSlider" min="-60" max="60" step="5" value="0" class="w-full h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500">
+          <div class="flex justify-between text-[9px] sm:text-[10px] text-slate-400 mt-1 font-mono">
+            <span>동쪽 (-60°)</span>
+            <span>중앙 (0°)</span>
+            <span>서쪽 (+60°)</span>
+          </div>
         </div>
+
+        <!-- 초기화 버튼 -->
+        <button id="resetSimBtn" class="mt-1 w-full py-2 bg-slate-800/80 hover:bg-slate-800 text-slate-300 text-xs rounded-xl font-medium border border-slate-700/60 transition flex items-center justify-center gap-1.5 active:scale-95">
+          <span>🔄 시뮬레이션 상태 초기화</span>
+        </button>
+
       </div>
 
-      <!-- Student Activity & School Record (세특) Generator Card -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 lg:p-6 shadow-xl space-y-5">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div>
-            <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-              <i class="fa-solid fa-pen-nib mr-1"></i> 학생 성찰 및 학생부(세특) 연계
-            </span>
-            <h3 class="text-base font-bold text-white mt-0.5">
-              생각의 변화가 보이는 3단계 탐구 성찰 노트
-            </h3>
-          </div>
-          <span class="text-xs text-slate-400 hidden sm:inline">작성 완료 후 클립보드에 바로 복사할 수 있습니다</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Step 1 -->
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 flex items-center justify-center text-[10px]">1</span>
-              <span>처음 생각 (수업 전)</span>
-            </label>
-            <textarea id="record-step1" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:border-cyan-400 outline-none resize-none" placeholder="예: 전기는 단순히 콘센트에서 흘러나오는 에너지고, 친환경 발전이 무조건 해결책이라고 생각했다."></textarea>
-          </div>
-
-          <!-- Step 2 -->
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded-full bg-blue-950 text-blue-400 border border-blue-800 flex items-center justify-center text-[10px]">2</span>
-              <span>결정적 근거 (활동 중 경험)</span>
-            </label>
-            <textarea id="record-step2" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:border-blue-400 outline-none resize-none" placeholder="예: 발전 방식에 따라 터빈 회전 유무(전자기유도 vs 광전효과)가 다르며, 19시 피크 시뮬레이션에서 간헐성 제어가 전력망의 핵심임을 체험했다."></textarea>
-          </div>
-
-          <!-- Step 3 -->
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center justify-center text-[10px]">3</span>
-              <span>지금의 통찰 (새로운 시선)</span>
-            </label>
-            <textarea id="record-step3" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:border-emerald-400 outline-none resize-none" placeholder="예: 발전은 양(얼마나 만드나)이 아니라 실시간 신호와 피드백 제어로 필요한 순간을 맞추는 시스템 엔지니어링임을 깨달았다."></textarea>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
-          <div class="text-[11px] text-slate-400 flex items-center gap-2">
-            <i class="fa-solid fa-lightbulb text-amber-400"></i>
-            <span>3단계를 통합하여 입학사정관 및 세특 제출용 300자 문장으로 생성합니다.</span>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="autoFillRecordExample()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition">
-              예시 불러오기
-            </button>
-            <button onclick="generateSeteukText()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> <span>세특 300자 생성</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Generated Result Display -->
-        <div id="seteuk-output-box" class="hidden mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-emerald-400 flex items-center gap-1.5">
-              <i class="fa-solid fa-file-lines"></i> 생성된 학생부 세특 기록 문안
-            </span>
-            <button onclick="copyGeneratedSeteuk()" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
-              <i class="fa-regular fa-copy"></i> 복사하기
-            </button>
-          </div>
-          <p id="seteuk-output-text" class="text-xs text-slate-200 leading-relaxed font-normal"></p>
-        </div>
-      </div>
     </section>
 
   </main>
 
-  <!-- Custom Modal Box (Non-alert) -->
-  <div id="custom-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
-      <div class="flex items-center gap-3">
-        <div id="modal-icon-container" class="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 text-lg">
-          <i class="fa-solid fa-circle-info" id="modal-icon"></i>
+  <!-- 탐구 미션 모달 드로어 -->
+  <div id="missionModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col p-4 sm:p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      <button id="closeMissionBtn" class="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 text-slate-400 hover:text-white text-lg font-bold w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-slate-800">
+        ✕
+      </button>
+
+      <div class="flex items-center space-x-2 text-indigo-400 text-[10px] sm:text-xs font-bold mb-1">
+        <span>CAMP MISSION GUIDE</span>
+      </div>
+      <h2 class="text-lg sm:text-xl font-bold text-white mb-1">가로등 하루 탐구 미션</h2>
+      <p class="text-[11px] sm:text-xs text-slate-400 mb-3 sm:mb-4">
+        세 가지 미션을 직접 수행하고, 직결형과 독립형의 핵심 차이점을 탐구해 보세요.
+      </p>
+
+      <div class="space-y-2.5 sm:space-y-3.5 overflow-y-auto custom-scroll pr-1">
+        <!-- 미션 1 -->
+        <div id="missionCard1" class="p-3 sm:p-4 rounded-xl border border-slate-800 bg-slate-950/80 flex items-start gap-2.5 sm:gap-3 transition">
+          <div id="missionBadge1" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+            1
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <h3 class="text-xs sm:text-sm font-bold text-slate-200 truncate">미션 ① 직결형으로 하루 돌려보기</h3>
+              <span id="missionStatus1" class="text-[10px] sm:text-[11px] font-semibold text-slate-400 shrink-0">진행 전</span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-400 mt-1 leading-relaxed">
+              [직결형] 모드에서 아침부터 밤까지 시간을 돌려보세요. 낮에 켜지고 밤에 꺼지는 실제 키트의 직결 현상을 확인합니다.
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 id="modal-title" class="font-bold text-white text-base">알림</h3>
-          <span id="modal-subtitle" class="text-xs text-slate-400">클래스리부트 탐구 활동</span>
+
+        <!-- 미션 2 -->
+        <div id="missionCard2" class="p-3 sm:p-4 rounded-xl border border-slate-800 bg-slate-950/80 flex items-start gap-2.5 sm:gap-3 transition">
+          <div id="missionBadge2" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+            2
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <h3 class="text-xs sm:text-sm font-bold text-slate-200 truncate">미션 ② 독립형으로 바꿔 다시 돌려보기</h3>
+              <span id="missionStatus2" class="text-[10px] sm:text-[11px] font-semibold text-slate-400 shrink-0">진행 전</span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-400 mt-1 leading-relaxed">
+              [독립형] 모드로 전환 후 하루를 돌려보세요. 낮에는 배터리를 충전하고, 해가 진 밤에만 불이 켜지는 차이점을 관찰합니다.
+            </p>
+          </div>
+        </div>
+
+        <!-- 미션 3 -->
+        <div id="missionCard3" class="p-3 sm:p-4 rounded-xl border border-slate-800 bg-slate-950/80 flex items-start gap-2.5 sm:gap-3 transition">
+          <div id="missionBadge3" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+            3
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <h3 class="text-xs sm:text-sm font-bold text-slate-200 truncate">미션 ③ 흐린 날 밤 변화 관찰하기</h3>
+              <span id="missionStatus3" class="text-[10px] sm:text-[11px] font-semibold text-slate-400 shrink-0">진행 전</span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-400 mt-1 leading-relaxed">
+              날씨를 [흐림]으로 설정하고 하루를 넘겨보세요. 충전량이 부족하여 밤에 불이 일찍 꺼지거나 약해지는 현상을 분석합니다.
+            </p>
+          </div>
         </div>
       </div>
-      <div id="modal-body" class="text-xs text-slate-300 leading-relaxed space-y-2"></div>
-      <div class="flex justify-end pt-2">
-        <button onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 font-bold text-white text-xs transition">
-          확인
+
+      <div class="mt-4 sm:mt-5 flex justify-end">
+        <button id="confirmMissionBtn" class="w-full sm:w-auto px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition active:scale-95">
+          실험 계속하기
         </button>
       </div>
     </div>
   </div>
 
+  <!-- 토스트 알림창 -->
+  <div id="toastBox" class="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-[90vw] sm:max-w-md"></div>
+
   <script>
-    /* =========================================================================
-       1. Global State & Audio Engine (Web Audio API)
-       ========================================================================= */
-    const state = {
-      currentTab: 'sim',
-      simMode: 'wind', // 'wind', 'hydro', 'solar', 'thermal'
-      audioEnabled: true,
-      params: {
-        wind: { speed: 12 },
-        hydro: { head: 45 },
-        solar: { irradiance: 75 },
-        thermal: { fuelRate: 50 }
-      },
-      gridGame: {
-        running: false,
-        timer: 90.0,
-        timerInterval: null,
-        allocated: 0,
-        sectors: [
-          { name: '종합병원', req: 18, on: false, priority: 1 },
-          { name: '데이터센터', req: 22, on: false, priority: 2 },
-          { name: '학교/대피소', req: 12, on: false, priority: 3 },
-          { name: '반도체 공장', req: 28, on: false, priority: 4 }
-        ]
+    /* ==========================================================
+       가로등 시뮬레이션 상태 및 엔진 상수 정의
+       ========================================================== */
+    const STATE = {
+      mode: 'direct',          // 'direct' (직결형) | 'standalone' (독립형)
+      time: 12.0,              // 6.0 (아침 6시) ~ 30.0 (다음 날 아침 6시)
+      weather: 'clear',        // 'clear' (맑음) | 'cloudy' (흐림)
+      isBlocked: false,        // 손/가림막 차광 여부
+      panelAngle: 0,           // -60도(동쪽) ~ +60도(서쪽)
+      
+      // 배터리 및 전기 상태 (독립형 기준)
+      batteryCharge: 60.0,      // 0 ~ 100 Wh (초기 60%)
+      maxBattery: 100.0,
+      
+      // 애니메이션 엔진
+      isPlaying: false,
+      playbackSpeed: 1.0,      // 1x, 2x, 4x
+      animFrameId: null,
+      lastTimestamp: null,
+
+      // 미션 달성 추적
+      missions: {
+        m1_directDayCompleted: false,
+        m1_nightSeen: false,
+        m2_standaloneDayCompleted: false,
+        m2_nightLightingSeen: false,
+        m3_cloudyNightDepleted: false,
       }
     };
 
-    // Mode Parameter key mapping (단일 핵심 변인으로 간소화)
-    const modeParamKeys = {
-      wind: 'speed',
-      hydro: 'head',
-      solar: 'irradiance',
-      thermal: 'fuelRate'
+    // UI 요소 캐싱
+    const DOM = {
+      skyContainer: document.getElementById('skyContainer'),
+      weatherOverlay: document.getElementById('weatherOverlay'),
+      blockageOverlay: document.getElementById('blockageOverlay'),
+      blockageBox: document.getElementById('blockageBox'),
+      sunEntity: document.getElementById('sunEntity'),
+      moonEntity: document.getElementById('moonEntity'),
+      solarPanelGroup: document.getElementById('solarPanelGroup'),
+      panelGlowRect: document.getElementById('panelGlowRect'),
+      sunRaysGraphic: document.getElementById('sunRaysGraphic'),
+      ray1: document.getElementById('ray1'),
+      ray2: document.getElementById('ray2'),
+      ray3: document.getElementById('ray3'),
+      lightBeam: document.getElementById('lightBeam'),
+      ledBulb: document.getElementById('ledBulb'),
+      batteryBoxSvg: document.getElementById('batteryBoxSvg'),
+      batteryBoxLabel: document.getElementById('batteryBoxLabel'),
+      
+      // 지표 및 텍스트
+      digitalClock: document.getElementById('digitalClock'),
+      dayNightBadge: document.getElementById('dayNightBadge'),
+      currentModeLabel: document.getElementById('currentModeLabel'),
+      ledStatusTag: document.getElementById('ledStatusTag'),
+      ledStatusDot: document.getElementById('ledStatusDot'),
+      ledStatusText: document.getElementById('ledStatusText'),
+      
+      powerBar: document.getElementById('powerBar'),
+      powerPercent: document.getElementById('powerPercent'),
+      powerWatt: document.getElementById('powerWatt'),
+      
+      ledBrightBar: document.getElementById('ledBrightBar'),
+      ledBrightPercent: document.getElementById('ledBrightPercent'),
+      ledLevelDesc: document.getElementById('ledLevelDesc'),
+      
+      batteryCard: document.getElementById('batteryCard'),
+      batteryBar: document.getElementById('batteryBar'),
+      batteryPercent: document.getElementById('batteryPercent'),
+      batteryFlowState: document.getElementById('batteryFlowState'),
+      batteryCapText: document.getElementById('batteryCapText'),
+
+      principleTitle: document.getElementById('principleTitle'),
+      principleDesc: document.getElementById('principleDesc'),
+
+      // 컨트롤
+      modeDirectBtn: document.getElementById('modeDirectBtn'),
+      modeStandaloneBtn: document.getElementById('modeStandaloneBtn'),
+      timeSlider: document.getElementById('timeSlider'),
+      playPauseBtn: document.getElementById('playPauseBtn'),
+      playIcon: document.getElementById('playIcon'),
+      playText: document.getElementById('playText'),
+      speedBtn: document.getElementById('speedBtn'),
+      weatherClearBtn: document.getElementById('weatherClearBtn'),
+      weatherCloudyBtn: document.getElementById('weatherCloudyBtn'),
+      blockageToggleBtn: document.getElementById('blockageToggleBtn'),
+      angleSlider: document.getElementById('angleSlider'),
+      angleValueLabel: document.getElementById('angleValueLabel'),
+      resetSimBtn: document.getElementById('resetSimBtn'),
+      
+      // 모달 & 미션
+      missionToggleBtn: document.getElementById('missionToggleBtn'),
+      missionProgressBadge: document.getElementById('missionProgressBadge'),
+      missionModal: document.getElementById('missionModal'),
+      closeMissionBtn: document.getElementById('closeMissionBtn'),
+      confirmMissionBtn: document.getElementById('confirmMissionBtn'),
+      toastBox: document.getElementById('toastBox'),
+      
+      missionCard1: document.getElementById('missionCard1'),
+      missionStatus1: document.getElementById('missionStatus1'),
+      missionBadge1: document.getElementById('missionBadge1'),
+      missionCard2: document.getElementById('missionCard2'),
+      missionStatus2: document.getElementById('missionStatus2'),
+      missionBadge2: document.getElementById('missionBadge2'),
+      missionCard3: document.getElementById('missionCard3'),
+      missionStatus3: document.getElementById('missionStatus3'),
+      missionBadge3: document.getElementById('missionBadge3')
     };
 
-    function getParam(mode) {
-      const key = modeParamKeys[mode];
-      return state.params[mode][key];
-    }
-
-    function setParam(mode, val) {
-      const key = modeParamKeys[mode];
-      state.params[mode][key] = val;
-    }
-
-    let audioCtx = null;
-    function getAudioContext() {
-      if (!audioCtx) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        audioCtx = new AudioContextClass();
+    /**
+     * 태양 및 달 위치, 조도 물리 계산
+     * 시간: 6:00 (일출) ~ 18:00 (일몰) -> 낮
+     * 18:00 ~ 30:00(다음날 06:00) -> 밤
+     */
+    function computeSolarPhysics(timeHours, weather, isBlocked, panelAngleDeg) {
+      const normalizedTime = (timeHours >= 24) ? (timeHours - 24) : timeHours;
+      const isDaytime = (timeHours >= 6.0 && timeHours <= 18.0);
+      
+      let sunElevationAngle = 0; // 태양 고도각 (-90도~+90도, 12시가 0도 천정)
+      let rawSunIntensity = 0;   // 0.0 ~ 1.0 (대기권 밖/맑은 날 최대 1.0)
+      
+      if (isDaytime) {
+        // 6시는 -90도, 12시는 0도, 18시는 +90도
+        const dayProgress = (timeHours - 6.0) / 12.0; // 0.0 ~ 1.0
+        // -60도 ~ +60도 범위의 해 방위각
+        sunElevationAngle = (dayProgress - 0.5) * 120.0;
+        
+        // 정오(12시)에 최대가 되는 사인 곡선형 일사 강도
+        const rad = Math.PI * dayProgress;
+        rawSunIntensity = Math.sin(rad); // 0 ~ 1.0
       }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+
+      // 날씨 감쇄율 (흐림: 30%만 도달)
+      const weatherFactor = (weather === 'cloudy') ? 0.3 : 1.0;
+      
+      // 차광(가림막) 계수
+      const blockageFactor = isBlocked ? 0.0 : 1.0;
+
+      // 패널 각도 일치도 (Cos theta 법칙: 해의 각도와 패널 각도가 일치할 때 최대 효율)
+      let angleEfficiency = 0.0;
+      if (isDaytime) {
+        // 해의 방향(sunElevationAngle)과 패널 각도(panelAngleDeg) 차이
+        const angleDiffDeg = Math.abs(sunElevationAngle - panelAngleDeg);
+        // 각도 차이가 0도면 1.0, 90도 이상 벗어나면 0
+        const radDiff = (Math.min(90, angleDiffDeg) * Math.PI) / 180;
+        angleEfficiency = Math.max(0.1, Math.cos(radDiff));
       }
-      return audioCtx;
-    }
 
-    function playTone(freq, type = 'sine', duration = 0.15, vol = 0.05) {
-      if (!state.audioEnabled) return;
-      try {
-        const ctx = getAudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(vol, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + duration);
-      } catch (e) {
-        // silent fail
-      }
-    }
+      // 최종 패널 발전 전력 (최대 50W)
+      const generationPower = isDaytime 
+        ? Math.max(0, 50.0 * rawSunIntensity * weatherFactor * blockageFactor * angleEfficiency)
+        : 0.0;
 
-    function toggleAudioFx() {
-      state.audioEnabled = !state.audioEnabled;
-      const icon = document.getElementById('audio-icon');
-      const text = document.querySelector('#audio-toggle span');
-      if (state.audioEnabled) {
-        icon.className = 'fa-solid fa-volume-high text-cyan-400';
-        text.innerText = '효과음 ON';
-        playTone(587.33, 'triangle', 0.2);
-      } else {
-        icon.className = 'fa-solid fa-volume-xmark text-slate-500';
-        text.innerText = '효과음 OFF';
-      }
-    }
-
-    /* =========================================================================
-       2. Modal Helper (Replacing alert)
-       ========================================================================= */
-    function showModal(title, subtitle, htmlBody, iconClass = 'fa-solid fa-circle-info') {
-      document.getElementById('modal-title').innerText = title;
-      document.getElementById('modal-subtitle').innerText = subtitle;
-      document.getElementById('modal-body').innerHTML = htmlBody;
-      document.getElementById('modal-icon').className = iconClass;
-      document.getElementById('custom-modal').classList.remove('hidden');
-      playTone(440, 'sine', 0.2, 0.08);
-    }
-
-    function closeModal() {
-      document.getElementById('custom-modal').classList.add('hidden');
-    }
-
-    /* =========================================================================
-       3. Tab Navigation
-       ========================================================================= */
-    function switchTab(tabId) {
-      state.currentTab = tabId;
-      playTone(523.25, 'sine', 0.1);
-
-      ['sim', 'quiz', 'grid', 'table'].forEach(t => {
-        const section = document.getElementById(`section-${t}`);
-        const btn = document.getElementById(`tab-btn-${t}`);
-        if (t === tabId) {
-          section.classList.remove('hidden');
-          btn.className = 'tab-btn active px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 bg-cyan-500 text-white shadow-md shadow-cyan-500/20 font-semibold';
-        } else {
-          section.classList.add('hidden');
-          btn.className = 'tab-btn px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200';
-        }
-      });
-
-      if (tabId === 'sim') {
-        resizeCanvas();
-      } else if (tabId === 'quiz') {
-        loadChallenge(document.getElementById('challenge-type-select').value);
-      }
-    }
-
-    /* =========================================================================
-       4. Simulation Physics & Visualizer Setup
-       ========================================================================= */
-    const simMeta = {
-      wind: {
-        title: '풍력 발전 (바람의 운동에너지 ➔ 회전 ➔ 전자기 유도)',
-        principle: '전자기 유도 (Faraday Law)',
-        hint: '풍속 슬라이더를 조절하여 블레이드 회전 속도와 유도전압을 관찰하세요',
-        slider1: { label: '바람의 세기 (풍속)', min: 0, max: 30, step: 0.5, unit: 'm/s', minL: '0 m/s', midL: '15 m/s', maxL: '30 m/s (돌풍)' },
-        statLabels: ['회전 속도 (RPM)', '전자기 유도 기전력', '에너지 변환 효율', '탄소 배출량 (CO₂)'],
-        presets: [
-          { name: '미풍 (3 m/s)', val: 3 },
-          { name: '정격풍속 (12 m/s)', val: 12 },
-          { name: '강풍/돌풍 (24 m/s)', val: 24 }
-        ],
-        steps: [
-          { name: '1. 바람', desc: '공기 운동에너지', color: 'border-cyan-500 text-cyan-400' },
-          { name: '2. 블레이드', desc: '양력에 의한 회전', color: 'border-blue-500 text-blue-400' },
-          { name: '3. 발전기 터빈', desc: '자속 변화(ΔΦ/Δt)', color: 'border-emerald-500 text-emerald-400' },
-          { name: '4. 전기 생산', desc: '교류 유도기전력', color: 'border-amber-500 text-amber-400' }
-        ],
-        scienceTitle: '패러데이 전자기 유도와 베츠 법칙(Betz Limit)',
-        scienceDesc: '유입되는 공기 질량의 운동에너지(0.5·m·v³)가 회전 토크를 만듭니다. 발전기 내부의 자석이 코일을 통과하며 자속의 변화(Faraday)를 유도하여 전기를 생산합니다. 유체역학상 이론적 최대 효율은 59.3%입니다.',
-        equation: '발전출력 P = 0.5 · ρ · A · v³ · Cp',
-        badge: '물리학 I & 통합과학'
-      },
-      hydro: {
-        title: '수력 발전 (물의 위치/운동에너지 ➔ 수차 회전 ➔ 발전기)',
-        principle: '위치에너지 변환과 수차 전자기 유도',
-        hint: '낙차(수두)를 조절하여 터빈 회전력과 기전력을 비교해보세요',
-        slider1: { label: '낙차 (수두 높이 H)', min: 10, max: 120, step: 2, unit: 'm', minL: '10 m (저낙차)', midL: '60 m', maxL: '120 m (고낙차)' },
-        statLabels: ['수차 회전 속도', '발전 유도 기전력', '수력 변환 효율', '탄소 배출량 (CO₂)'],
-        presets: [
-          { name: '저낙차 (25 m)', val: 25 },
-          { name: '평시 정격 (60 m)', val: 60 },
-          { name: '고낙차 최대 (110 m)', val: 110 }
-        ],
-        steps: [
-          { name: '1. 댐 낙하수', desc: '위치에너지(mgh)', color: 'border-blue-500 text-blue-400' },
-          { name: '2. 펜스톡 노즐', desc: '고압 수류 가속', color: 'border-cyan-500 text-cyan-400' },
-          { name: '3. 수차 발전기', desc: '자석 로터 회전', color: 'border-emerald-500 text-emerald-400' },
-          { name: '4. 고전압 전기', desc: '송전용 전력 발생', color: 'border-amber-500 text-amber-400' }
-        ],
-        scienceTitle: '중력 위치에너지와 수차 터빈의 전자기 유도',
-        scienceDesc: '수면과 터빈 사이의 높이 차이로 발생하는 위치에너지가 펜스톡(관로)을 통과하며 고속 수류의 운동에너지로 변환됩니다. 수차가 발전기 전자석을 고속 회전시켜 대용량 교류 전력을 안정적으로 생산합니다.',
-        equation: '발전출력 P = η · ρ · g · Q · H',
-        badge: '통합과학 & 역학'
-      },
-      solar: {
-        title: '태양광 발전 (빛에너지 ➔ 광전효과 ➔ 직류 전기 생성)',
-        principle: '광기전력 효과 (Photovoltaic Effect - 비회전 방식)',
-        hint: '일사량을 변경하여 반도체 전자 이동과 직류 전력을 관찰하세요',
-        slider1: { label: '일사 강도 (Solar Irradiance)', min: 0, max: 100, step: 1, unit: '%', minL: '0% (야간)', midL: '50% (흐림)', maxL: '100% (쾌청)' },
-        statLabels: ['회전 장치 여부', '광기전력 (DC 직류)', '광전 변환 효율', '탄소 배출량 (CO₂)'],
-        presets: [
-          { name: '야간 (0%)', val: 0 },
-          { name: '흐린 날 (35%)', val: 35 },
-          { name: '한여름 쾌청 (100%)', val: 100 }
-        ],
-        steps: [
-          { name: '1. 태양 광자', desc: '빛에너지 입사', color: 'border-amber-500 text-amber-400' },
-          { name: '2. 반도체 흡수', desc: '전자-정공쌍 생성', color: 'border-cyan-500 text-cyan-400' },
-          { name: '3. p-n 접합면', desc: '전하 분리 및 이동', color: 'border-blue-500 text-blue-400' },
-          { name: '4. 직류 전력', desc: '인버터 거쳐 송전', color: 'border-emerald-500 text-emerald-400' }
-        ],
-        scienceTitle: '비회전 방식 : p-n 접합 반도체의 광기전력 효과',
-        scienceDesc: '터빈이나 모터의 회전 없이 순수하게 양자역학적 광전효과로 작동합니다. 반도체 패널에 빛(광자)이 닿으면 원자 내 전자가 에너지를 얻어 전도띠로 여기되어 전자(-)와 정공(+)이 분리되며 직류(DC) 전압이 형성됩니다.',
-        equation: '광전효과 에너지 E = h · ν - W',
-        badge: '물리학 I (물질과 전자기장)'
-      },
-      thermal: {
-        title: '화력 발전 (연료 화학에너지 ➔ 열·고압 증기 ➔ 증기 터빈)',
-        principle: '열역학 사이클 및 증기 터빈 전자기 유도',
-        hint: '연료 투입량을 올려 증기압과 터빈 회전, 굴뚝 탄소 배출을 비교하세요',
-        slider1: { label: '연료 연소 투입률', min: 10, max: 100, step: 5, unit: '%', minL: '10% (최저부하)', midL: '50% (정상)', maxL: '100% (최대출력)' },
-        statLabels: ['증기 터빈 속도', '발전기 출력 전압', '열역학 열효율', '탄소 배출량 (CO₂)'],
-        presets: [
-          { name: '최저 부하 (20%)', val: 20 },
-          { name: '정상 부하 (55%)', val: 55 },
-          { name: '최대 부하 (100%)', val: 100 }
-        ],
-        steps: [
-          { name: '1. 화석 연료', desc: '화학에너지 연소', color: 'border-rose-500 text-rose-400' },
-          { name: '2. 고압 증기', desc: '보일러 열 변환', color: 'border-amber-500 text-amber-400' },
-          { name: '3. 증기 터빈', desc: '블레이드 고속 회전', color: 'border-cyan-500 text-cyan-400' },
-          { name: '4. 대용량 전기', desc: '발전기 전자기 유도', color: 'border-emerald-500 text-emerald-400' }
-        ],
-        scienceTitle: '화학에너지에서 열, 그리고 운동을 거쳐 전기로',
-        scienceDesc: '석탄·LNG의 화학에너지를 연소시켜 고온·고압의 수증기를 만들고, 이 증기가 팽창하며 증기 터빈을 회전시켜 전기를 유도합니다. 날씨에 구애받지 않고 출력을 조절할 수 있으나 온실가스와 탄소를 다량 배출합니다.',
-        equation: '열효율 η = 1 - (Q_out / Q_in)',
-        badge: '통합과학 & 화학'
-      }
-    };
-
-    function selectSimMode(mode) {
-      state.simMode = mode;
-      playTone(440, 'triangle', 0.15);
-
-      ['wind', 'hydro', 'solar', 'thermal'].forEach(m => {
-        const btn = document.getElementById(`sim-btn-${m}`);
-        if (m === mode) {
-          btn.className = 'sim-mode-btn active px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-cyan-500 text-white shadow-md shadow-cyan-500/20';
-        } else {
-          btn.className = 'sim-mode-btn px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white';
-        }
-      });
-
-      updateSimUI();
-    }
-
-    function applyPreset(val) {
-      setParam(state.simMode, val);
-      playTone(520, 'sine', 0.12);
-      updateSimUI();
-    }
-
-    function updateSimUI() {
-      const mode = state.simMode;
-      const info = simMeta[mode];
-
-      document.getElementById('canvas-status-title').innerText = info.title;
-      document.getElementById('overlay-principle-badge').innerText = info.principle;
-      document.getElementById('overlay-dynamic-hint').innerText = info.hint;
-
-      // Presets
-      const presetBox = document.getElementById('sim-presets-container');
-      presetBox.innerHTML = '';
-      info.presets.forEach(p => {
-        const btn = document.createElement('button');
-        btn.className = 'px-2 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-300 text-[11px] font-medium border border-slate-700/60 transition truncate';
-        btn.innerText = p.name;
-        btn.onclick = () => applyPreset(p.val);
-        presetBox.appendChild(btn);
-      });
-
-      // Slider 1 Sync
-      const s1 = info.slider1;
-      const slider1 = document.getElementById('paramSlider1');
-      slider1.min = s1.min;
-      slider1.max = s1.max;
-      slider1.step = s1.step;
-      const currentVal1 = getParam(mode);
-      slider1.value = currentVal1;
-      document.getElementById('slider1-label').innerText = s1.label;
-      document.getElementById('slider1-val').innerText = `${currentVal1} ${s1.unit}`;
-      document.getElementById('slider1-min').innerText = s1.minL;
-      document.getElementById('slider1-mid').innerText = s1.midL;
-      document.getElementById('slider1-max').innerText = s1.maxL;
-
-      // Stat Label names
-      document.getElementById('stat1-name').innerText = info.statLabels[0];
-      document.getElementById('stat2-name').innerText = info.statLabels[1];
-      document.getElementById('stat3-name').innerText = info.statLabels[2];
-      document.getElementById('stat4-name').innerText = info.statLabels[3];
-
-      // Steps pipeline
-      const stepsContainer = document.getElementById('diagram-step-boxes');
-      stepsContainer.innerHTML = '';
-      info.steps.forEach((step) => {
-        const box = document.createElement('div');
-        box.className = `p-2 rounded-lg bg-slate-950/70 border ${step.color} transition`;
-        box.innerHTML = `
-          <div class="font-bold text-[11px]">${step.name}</div>
-          <div class="text-[10px] opacity-75">${step.desc}</div>
-        `;
-        stepsContainer.appendChild(box);
-      });
-
-      // Science explanation
-      document.getElementById('science-principle-title').innerText = info.scienceTitle;
-      document.getElementById('science-principle-desc').innerHTML = info.scienceDesc;
-      document.getElementById('science-equation').innerText = info.equation;
-      document.getElementById('science-badge').innerText = info.badge;
-    }
-
-    function resetSimParams() {
-      state.params = {
-        wind: { speed: 12 },
-        hydro: { head: 45 },
-        solar: { irradiance: 75 },
-        thermal: { fuelRate: 50 }
+      return {
+        isDaytime,
+        normalizedTime,
+        sunElevationAngle,
+        rawSunIntensity,
+        weatherFactor,
+        blockageFactor,
+        angleEfficiency,
+        generationPower
       };
-      playTone(330, 'sine', 0.1);
-      updateSimUI();
     }
 
-    // Slider Event Listener (Slider 1 Only)
-    document.getElementById('paramSlider1').addEventListener('input', (e) => {
-      const v = parseFloat(e.target.value);
-      const m = state.simMode;
-      const unit = simMeta[m].slider1.unit;
-      setParam(m, v);
-      document.getElementById('slider1-val').innerText = `${v} ${unit}`;
-    });
-
-    /* =========================================================================
-       5. 2D Canvas Physics Animation Loop
-       ========================================================================= */
-    const canvas = document.getElementById('simCanvas');
-    const ctx = canvas.getContext('2d');
-    let angleRot = 0;
-    let waterParticles = [];
-    let photonParticles = [];
-    let electronParticles = [];
-    let steamParticles = [];
-    let smokeParticles = [];
-
-    function resizeCanvas() {
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    }
-    window.addEventListener('resize', resizeCanvas);
-
-    // Initialize particles
-    for (let i = 0; i < 45; i++) {
-      waterParticles.push({ prog: Math.random(), size: 2 + Math.random() * 3, lane: Math.random() * 10 - 5 });
-      photonParticles.push({ 
-        prog: Math.random(), 
-        offset: (Math.random() - 0.5) * 110, 
-        speed: 0.012 + Math.random() * 0.008, 
-        size: 2 + Math.random() * 1.5 
-      });
-      electronParticles.push({ prog: Math.random() });
-      steamParticles.push({ x: 120 + Math.random() * 120, y: 150 + Math.random() * 6 - 3, r: 2 + Math.random() * 3, alpha: 0.8 });
-      smokeParticles.push({ x: 90 + Math.random() * 10 - 5, y: 80 - Math.random() * 60, r: 3 + Math.random() * 6, vy: 1 + Math.random() * 1.5, alpha: Math.random() * 0.7 });
-    }
-    function renderSimulation() {
-      const w = canvas.width / window.devicePixelRatio;
-      const h = canvas.height / window.devicePixelRatio;
-      ctx.clearRect(0, 0, w, h);
-
-      const mode = state.simMode;
-      let powerKW = 0;
-      let rpm = 0;
-      let voltage = 0;
-      let efficiency = 0;
-      let co2 = 0;
-
-      if (mode === 'wind') {
-        const speed = state.params.wind.speed;
-        const size = 50; // 기준 블레이드 규격 고정 (50m)
-
-        // P = 0.5 * rho * A * v^3 * Cp
-        powerKW = Math.round(0.0006 * Math.PI * Math.pow(size, 2) * Math.pow(speed, 3) * 0.42);
-        rpm = speed > 0.5 ? Math.round(speed * (50 / (size * 0.4))) : 0;
-        voltage = Math.min(690, Math.round(rpm * 15.2));
-        efficiency = speed >= 3 ? 43.5 : (speed > 0 ? 15.0 : 0);
-        co2 = 0;
-
-        angleRot += (rpm * 0.002);
-
-        // Wind speed lines
-        ctx.strokeStyle = speed > 18 ? 'rgba(6, 182, 212, 0.6)' : 'rgba(6, 182, 212, 0.25)';
-        ctx.lineWidth = Math.min(3, 1 + speed * 0.08);
-        for (let i = 0; i < 7; i++) {
-          const yPos = 35 + i * 32;
-          const xOffset = ((Date.now() * (speed * 0.12) + i * 85) % (w + 120)) - 60;
-          ctx.beginPath();
-          ctx.moveTo(xOffset, yPos);
-          ctx.lineTo(xOffset + 35 + speed * 3.5, yPos);
-          ctx.stroke();
-        }
-
-        // Wind Turbine Tower
-        const cx = w * 0.42;
-        const cy = h * 0.52;
-        const bladeLen = 72;
-
-        ctx.fillStyle = '#475569';
-        ctx.beginPath();
-        ctx.moveTo(cx - 7, cy);
-        ctx.lineTo(cx + 7, cy);
-        ctx.lineTo(cx + 15, h - 25);
-        ctx.lineTo(cx - 15, h - 25);
-        ctx.closePath();
-        ctx.fill();
-
-        // Hub & Rotor
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(angleRot);
-
-        for (let b = 0; b < 3; b++) {
-          ctx.save();
-          ctx.rotate((b * 2 * Math.PI) / 3);
-          ctx.fillStyle = '#e2e8f0';
-          ctx.shadowColor = '#06b6d4';
-          ctx.shadowBlur = speed > 10 ? 8 : 1;
-          ctx.beginPath();
-          ctx.moveTo(-5, 0);
-          ctx.lineTo(0, -bladeLen);
-          ctx.lineTo(5, 0);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        }
-
-        // Hub Center
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#06b6d4';
-        ctx.beginPath();
-        ctx.arc(0, 0, 9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // Generator Box
-        drawInductionGeneratorBox(ctx, cx + 45, cy - 25, rpm, powerKW);
-
-        // Stats Display
-        document.getElementById('stat1-val').innerText = `${rpm} rpm`;
-        document.getElementById('stat2-val').innerText = `${voltage} V (교류)`;
-        document.getElementById('stat3-val').innerText = `${efficiency} %`;
-        document.getElementById('stat4-val').innerText = `0.0 g/kWh (친환경)`;
-
-      } else if (mode === 'hydro') {
-        const head = state.params.hydro.head;
-        const flow = 50; // 기준 방류 유량 고정 (50 m³/s)
-
-        powerKW = Math.round(9.81 * flow * head * 0.88);
-        rpm = Math.round(Math.sqrt(head) * 14);
-        voltage = Math.min(6600, Math.round(Math.sqrt(head) * 220));
-        efficiency = 88.5;
-        co2 = 0;
-
-        angleRot += (rpm * 0.0018);
-
-        // Dam structure
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(25, 45, w * 0.28, h - 70);
-
-        // Reservoir Water
-        const waterHeight = Math.min(h * 0.45, 30 + (head / 120) * (h * 0.35));
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.55)';
-        ctx.fillRect(25, 55, w * 0.28, waterHeight);
-
-        // Dam label
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '10px monospace';
-        ctx.fillText(`수두(낙차): ${head}m`, 30, 75);
-
-        // Penstock Pipe
-        const pipeStartX = 25 + w * 0.28;
-        const pipeStartY = 55 + waterHeight * 0.8;
-        const tx = w * 0.62;
-        const ty = h - 60;
-
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 16;
-        ctx.beginPath();
-        ctx.moveTo(pipeStartX, pipeStartY);
-        ctx.lineTo(tx, ty);
-        ctx.stroke();
-
-        // Water particles flowing in penstock
-        ctx.fillStyle = '#60a5fa';
-        const flowSpeed = 0.008 + (head * 0.00025);
-        waterParticles.forEach(p => {
-          p.prog += flowSpeed;
-          if (p.prog > 1) p.prog = 0;
-          const px = pipeStartX + (tx - pipeStartX) * p.prog;
-          const py = pipeStartY + (ty - pipeStartY) * p.prog;
-          ctx.beginPath();
-          ctx.arc(px + p.lane, py, p.size, 0, Math.PI * 2);
-          ctx.fill();
-        });
-
-        // Water Turbine (Pelton wheel)
-        ctx.save();
-        ctx.translate(tx, ty);
-        ctx.rotate(angleRot);
-        ctx.fillStyle = '#38bdf8';
-        for (let r = 0; r < 8; r++) {
-          ctx.save();
-          ctx.rotate((r * Math.PI) / 4);
-          ctx.fillRect(-5, -24, 10, 14);
-          ctx.restore();
-        }
-        ctx.beginPath();
-        ctx.arc(0, 0, 12, 0, Math.PI * 2);
-        ctx.fillStyle = '#0284c7';
-        ctx.fill();
-        ctx.restore();
-
-        // Generator Box
-        drawInductionGeneratorBox(ctx, tx + 40, ty - 30, rpm, powerKW);
-
-        // Stats Display
-        document.getElementById('stat1-val').innerText = `${rpm} rpm`;
-        document.getElementById('stat2-val').innerText = `${voltage} V (유도전압)`;
-        document.getElementById('stat3-val').innerText = `${efficiency} %`;
-        document.getElementById('stat4-val').innerText = `0.0 g/kWh (친환경)`;
-
-      } else if (mode === 'solar') {
-        const irr = state.params.solar.irradiance;
-        const panelAngle = -0.52; // 태양 방향으로 30도 상향 경사 (최적 각도)
-        const cosA = Math.cos(panelAngle);
-        const sinA = Math.sin(panelAngle);
-
-        powerKW = Math.round((irr / 100) * 850);
-        rpm = 0; // 비회전
-        voltage = Math.round((irr / 100) * 48);
-        efficiency = irr > 0 ? 21.4 : 0;
-        co2 = 0;
-
-        // Sun position
-        const sunX = Math.min(95, w * 0.16);
-        const sunY = Math.min(65, h * 0.22);
-        const sunAlpha = Math.max(0.2, irr / 100);
-
-        // Panel mount & pivot position
-        const mountX = w * 0.46;
-        const mountY = h * 0.70;
-        const pivotX = mountX;
-        const pivotY = mountY - 18;
-
-        // Sun Body & Corona
-        ctx.fillStyle = `rgba(245, 158, 11, ${sunAlpha})`;
-        ctx.shadowColor = '#f59e0b';
-        ctx.shadowBlur = irr > 10 ? 30 : 4;
-        ctx.beginPath();
-        ctx.arc(sunX, sunY, 28, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        if (irr > 10) {
-          ctx.strokeStyle = `rgba(251, 191, 36, ${0.15 + (irr / 100) * 0.35})`;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(sunX, sunY, 35 + Math.sin(Date.now() * 0.003) * 3, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.fillStyle = '#fef08a';
-          ctx.font = '10px monospace';
-          ctx.fillText(`태양광 (${irr}%)`, sunX - 25, sunY + 48);
-        }
-
-        // Directional Sunbeam Cone & Photons into Panel
-        if (irr > 2) {
-          // Panel surface endpoints
-          const p1x = pivotX - 60 * cosA;
-          const p1y = pivotY - 60 * sinA - 6;
-          const p2x = pivotX + 60 * cosA;
-          const p2y = pivotY + 60 * sinA - 6;
-
-          // Golden sunlight shaft from sun to solar panel
-          const beamGrad = ctx.createLinearGradient(sunX, sunY, pivotX, pivotY);
-          beamGrad.addColorStop(0, `rgba(253, 224, 71, ${0.08 + (irr / 100) * 0.22})`);
-          beamGrad.addColorStop(0.7, `rgba(253, 224, 71, ${0.03 + (irr / 100) * 0.10})`);
-          beamGrad.addColorStop(1, 'rgba(253, 224, 71, 0.02)');
-
-          ctx.fillStyle = beamGrad;
-          ctx.beginPath();
-          ctx.moveTo(sunX - 10, sunY + 15);
-          ctx.lineTo(sunX + 22, sunY + 8);
-          ctx.lineTo(p2x, p2y);
-          ctx.lineTo(p1x, p1y);
-          ctx.closePath();
-          ctx.fill();
-
-          // Photons traveling along the direct line of sight into the panel
-          ctx.shadowBlur = 6;
-          photonParticles.forEach(p => {
-            p.prog += (0.012 + (irr / 100) * 0.022);
-            if (p.prog > 1) {
-              p.prog = 0;
-              p.offset = (Math.random() - 0.5) * 110;
-            }
-
-            // Exact target location on the tilted panel surface
-            const targetX = pivotX + p.offset * cosA;
-            const targetY = pivotY + p.offset * sinA - 6;
-
-            const currX = sunX + (targetX - sunX) * p.prog;
-            const currY = sunY + (targetY - sunY) * p.prog;
-
-            // Glowing photon
-            ctx.fillStyle = '#fef08a';
-            ctx.shadowColor = '#facc15';
-            ctx.beginPath();
-            ctx.arc(currX, currY, p.size || 2.2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Light trail
-            ctx.strokeStyle = 'rgba(253, 224, 71, 0.45)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(currX, currY);
-            ctx.lineTo(currX - (targetX - sunX) * 0.05, currY - (targetY - sunY) * 0.05);
-            ctx.stroke();
-
-            // Photoelectric absorption spark when photon enters the panel
-            if (p.prog > 0.93) {
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-              ctx.beginPath();
-              ctx.arc(targetX, targetY, 3.2, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          });
-          ctx.shadowBlur = 0;
-        }
-
-        // Panel Stand & Pivot
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(mountX - 6, mountY - 18, 12, 45);
-        ctx.fillRect(mountX - 25, mountY + 22, 50, 6);
-
-        ctx.fillStyle = '#94a3b8';
-        ctx.beginPath();
-        ctx.arc(pivotX, pivotY, 6, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Tilted PV Panel Body
-        ctx.save();
-        ctx.translate(pivotX, pivotY);
-        ctx.rotate(panelAngle);
-
-        // Aluminum frame
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(-65, -8, 130, 16);
-
-        // Silicon solar cell surface (facing incoming light)
-        ctx.fillStyle = irr > 5 ? '#1e3a8a' : '#0f172a';
-        ctx.strokeStyle = irr > 5 ? '#38bdf8' : '#334155';
-        ctx.lineWidth = 2;
-        ctx.fillRect(-65, -13, 130, 8);
-        ctx.strokeRect(-65, -13, 130, 8);
-
-        // Solar cell grid divisions
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = 1;
-        for (let gl = -55; gl <= 55; gl += 18) {
-          ctx.beginPath();
-          ctx.moveTo(gl, -13);
-          ctx.lineTo(gl, -5);
-          ctx.stroke();
-        }
-
-        // Photoelectric excitation glow on panel
-        if (powerKW > 0) {
-          ctx.fillStyle = 'rgba(56, 189, 248, 0.3)';
-          ctx.fillRect(-64, -12, 128, 6);
-        }
-        ctx.restore();
-
-        // Label
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '10px monospace';
-        ctx.fillText('PV 태양전지 (광전효과)', mountX - 55, mountY + 38);
-
-        // Circuit line from Panel Mount to Inverter
-        const invX = w * 0.74;
-        const invY = h * 0.58;
-
-        ctx.strokeStyle = powerKW > 0 ? '#38bdf8' : '#475569';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(mountX, mountY + 5);
-        ctx.lineTo(mountX + 45, mountY + 5);
-        ctx.lineTo(invX, invY + 25);
-        ctx.stroke();
-
-        // Flowing Electrons (DC) into Inverter
-        if (powerKW > 0) {
-          ctx.fillStyle = '#67e8f9';
-          ctx.shadowColor = '#06b6d4';
-          ctx.shadowBlur = 4;
-          electronParticles.forEach(ep => {
-            ep.prog += 0.012 * Math.max(0.5, powerKW / 400);
-            if (ep.prog > 1) ep.prog = 0;
-            let ex, ey;
-            if (ep.prog < 0.3) {
-              const segP = ep.prog / 0.3;
-              ex = mountX + 45 * segP;
-              ey = mountY + 5;
-            } else {
-              const segP = (ep.prog - 0.3) / 0.7;
-              ex = (mountX + 45) + (invX - (mountX + 45)) * segP;
-              ey = (mountY + 5) + (invY + 25 - (mountY + 5)) * segP;
-            }
-            ctx.beginPath();
-            ctx.arc(ex, ey, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-          });
-          ctx.shadowBlur = 0;
-        }
-
-        // Inverter (DC ➔ AC) Box
-        ctx.fillStyle = '#0f172a';
-        ctx.strokeStyle = powerKW > 0 ? '#10b981' : '#475569';
-        ctx.lineWidth = 2;
-        ctx.fillRect(invX, invY, 78, 55);
-        ctx.strokeRect(invX, invY, 78, 55);
-
-        ctx.fillStyle = '#10b981';
-        ctx.font = '10px monospace';
-        ctx.fillText('INVERTER', invX + 10, invY + 20);
-        ctx.fillText('DC ➔ AC', invX + 14, invY + 36);
-
-        // Inverter Output Power Line
-        if (powerKW > 0) {
-          ctx.strokeStyle = '#10b981';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(invX + 78, invY + 27);
-          ctx.lineTo(invX + 105, invY + 27);
-          ctx.stroke();
-
-          ctx.fillStyle = '#10b981';
-          ctx.beginPath();
-          ctx.arc(invX + 107, invY + 27, 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Stats Display
-        document.getElementById('stat1-val').innerText = '회전 없음 (비회전식)';
-        document.getElementById('stat2-val').innerText = `${voltage} V (직류 DC)`;
-        document.getElementById('stat3-val').innerText = `${efficiency} %`;
-        document.getElementById('stat4-val').innerText = `0.0 g/kWh (친환경)`;
-
-      } else if (mode === 'thermal') {
-        const fuel = state.params.thermal.fuelRate;
-        const temp = 450; // 기준 증기 온도 고정 (450℃)
-
-        powerKW = Math.round(fuel * 4.5 * 8.5);
-        rpm = Math.round(fuel * 34);
-        voltage = 22000;
-        efficiency = 38.0;
-        co2 = Math.round(fuel * 8.8);
-
-        angleRot += (rpm * 0.002);
-
-        // Boiler & Chimney Structure
-        const boilerX = 40;
-        const boilerY = h * 0.42;
-        const boilerW = 90;
-        const boilerH = h * 0.48;
-
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(boilerX, boilerY, boilerW, boilerH);
-
-        // Chimney Stack
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(boilerX + 15, boilerY - 45, 25, 45);
-
-        // Smoke particles (CO2 emissions)
-        smokeParticles.forEach(sp => {
-          sp.y -= sp.vy * (fuel / 40);
-          sp.x += (Math.random() - 0.5) * 1.2;
-          if (sp.y < 10) {
-            sp.y = boilerY - 45;
-            sp.x = boilerX + 27 + (Math.random() * 8 - 4);
-          }
-          ctx.fillStyle = `rgba(148, 163, 184, ${(fuel / 100) * 0.6})`;
-          ctx.beginPath();
-          ctx.arc(sp.x, sp.y, sp.r * (fuel / 50), 0, Math.PI * 2);
-          ctx.fill();
-        });
-
-        // Boiler label
-        ctx.fillStyle = '#f87171';
-        ctx.font = '10px monospace';
-        ctx.fillText('BOILER', boilerX + 24, boilerY + 22);
-
-        // Animated Flame inside boiler
-        const flameHeight = 15 + (fuel * 0.35);
-        ctx.fillStyle = fuel > 60 ? '#ef4444' : '#f97316';
-        ctx.beginPath();
-        ctx.moveTo(boilerX + 15, boilerY + boilerH - 10);
-        ctx.lineTo(boilerX + boilerW / 2, boilerY + boilerH - 10 - flameHeight);
-        ctx.lineTo(boilerX + boilerW - 15, boilerY + boilerH - 10);
-        ctx.closePath();
-        ctx.fill();
-
-        // High Pressure Steam Pipe
-        const stX = w * 0.60;
-        const stY = boilerY + 25;
-
-        ctx.strokeStyle = '#94a3b8';
-        ctx.lineWidth = 10;
-        ctx.beginPath();
-        ctx.moveTo(boilerX + boilerW, stY);
-        ctx.lineTo(stX, stY);
-        ctx.stroke();
-
-        // Steam particles
-        steamParticles.forEach(p => {
-          p.x += (fuel * 0.08) * (temp / 350);
-          if (p.x > stX) p.x = boilerX + boilerW;
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-          ctx.beginPath();
-          ctx.arc(p.x, stY, p.r, 0, Math.PI * 2);
-          ctx.fill();
-        });
-
-        // Steam Turbine Wheel
-        ctx.save();
-        ctx.translate(stX, stY);
-        ctx.rotate(angleRot);
-        ctx.fillStyle = '#cbd5e1';
-        for (let b = 0; b < 6; b++) {
-          ctx.save();
-          ctx.rotate((b * Math.PI) / 3);
-          ctx.fillRect(-5, -22, 10, 15);
-          ctx.restore();
-        }
-        ctx.beginPath();
-        ctx.arc(0, 0, 12, 0, Math.PI * 2);
-        ctx.fillStyle = '#475569';
-        ctx.fill();
-        ctx.restore();
-
-        // Generator Box
-        drawInductionGeneratorBox(ctx, stX + 45, stY - 25, rpm, powerKW);
-
-        // Stats Display
-        document.getElementById('stat1-val').innerText = `${rpm} rpm`;
-        document.getElementById('stat2-val').innerText = `${voltage} V (고압)`;
-        document.getElementById('stat3-val').innerText = `${efficiency} %`;
-        document.getElementById('stat4-val').innerText = `${co2} g/kWh (온실가스)`;
-      }
-
-      // Telemetry Output Badge
-      document.getElementById('telemetry-power-badge').innerText = `발전 출력: ${powerKW.toLocaleString()} kW`;
-
-      requestAnimationFrame(renderSimulation);
-    }
-    function drawInductionGeneratorBox(ctx, gx, gy, rpm, kw) {
-      // Generator Casing
-      ctx.fillStyle = '#0f172a';
-      ctx.strokeStyle = kw > 0 ? '#06b6d4' : '#475569';
-      ctx.lineWidth = 2;
-      ctx.fillRect(gx, gy, 70, 50);
-      ctx.strokeRect(gx, gy, 70, 50);
-
-      // Label
-      ctx.fillStyle = '#06b6d4';
-      ctx.font = '10px monospace';
-      ctx.fillText('GENERATOR', gx + 6, gy + 18);
-      ctx.fillText(`ΔΦ: ${rpm > 0 ? 'HIGH' : '0'}`, gx + 10, gy + 32);
-
-      // Output Spark Line
-      if (kw > 0) {
-        ctx.strokeStyle = '#10b981';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(gx + 70, gy + 25);
-        ctx.lineTo(gx + 100, gy + 25);
-        ctx.stroke();
-
-        ctx.fillStyle = '#10b981';
-        ctx.beginPath();
-        ctx.arc(gx + 102, gy + 25, 4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    /* =========================================================================
-       6. Energy Transformation Pipeline Challenge (Interactive Quiz)
-       ========================================================================= */
-    const challengeData = {
-      wind: {
-        correct: ['바람 (운동에너지)', '날개 블레이드 회전', '풍력 터빈 & 발전기', '전기 (교류 전압)'],
-        distractors: ['빛 (광에너지)', '수차 회전운동', '광전효과 (전자 이동)', '연소 열에너지', '증기 터빈'],
-        desc: '풍력 발전은 대기의 운동에너지를 블레이드의 기계적 회전으로 바꾸고, 발전기 자석을 돌려 전자기 유도를 일으킵니다.'
-      },
-      hydro: {
-        correct: ['물 (위치·운동에너지)', '수차 회전운동', '수차 & 발전기', '전기 (교류 전압)'],
-        distractors: ['바람 (운동에너지)', '광전효과 (전자 이동)', '태양전지 (반도체 패널)', '연소 열 ➔ 증기'],
-        desc: '수력 발전은 낙하하는 물의 위치에너지를 수차의 회전력으로 바꾸어 자석을 움직여 전류를 생성합니다.'
-      },
-      solar: {
-        correct: ['빛 (광에너지)', '광전효과 (전자 이동)', '태양전지 (반도체 패널)', '전기 (직류 전압)'],
-        distractors: ['날개 블레이드 회전', '풍력 터빈 & 발전기', '수차 & 발전기', '연소 열 ➔ 증기 회전'],
-        desc: '태양광 발전은 회전 부품 없이 반도체 내부의 광전효과를 통해 전자를 직접 분리·이동시키는 비회전 발전입니다.'
-      },
-      thermal: {
-        correct: ['연료 (화학에너지)', '연소 열 ➔ 증기 회전', '증기 터빈 & 발전기', '전기 (교류 전압)'],
-        distractors: ['물 (위치에너지)', '광전효과 (전자 이동)', '태양전지 패널', '바람 (운동에너지)'],
-        desc: '화력 발전은 연료의 연소열로 물을 끓여 고압 증기를 만든 후, 증기 터빈을 회전시켜 전자기 유도로 발전합니다.'
-      }
-    };
-
-    let userSlotAnswers = [null, null, null, null];
-    let selectedSlotTarget = null; // 학생이 모바일에서 특정 슬롯을 먼저 터치했을 때 활성화
-
-    function loadChallenge(type) {
-      userSlotAnswers = [null, null, null, null];
-      selectedSlotTarget = null;
-      for (let i = 0; i < 4; i++) {
-        renderSlot(i, null);
-      }
-      document.getElementById('quiz-result-banner').classList.add('hidden');
-
-      const data = challengeData[type];
-      const allCards = [...data.correct, ...data.distractors];
-      // Shuffle array
-      allCards.sort(() => Math.random() - 0.5);
-
-      const pool = document.getElementById('card-pool');
-      pool.innerHTML = '';
-      allCards.forEach(txt => {
-        const card = document.createElement('div');
-        card.className = 'quiz-card px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-slate-200 cursor-pointer shadow transition active:scale-95 touch-manipulation flex items-center gap-1.5 select-none';
-        card.setAttribute('data-card-text', txt);
-        card.innerHTML = `<span>${txt}</span>`;
-        card.draggable = true;
-
-        // Desktop HTML5 drag
-        card.ondragstart = (e) => e.dataTransfer.setData('text/plain', txt);
-
-        // Mobile touch drag engine
-        attachMobileTouchEvents(card, txt);
-
-        // Click / Tap handler
-        card.onclick = (e) => {
-          e.stopPropagation();
-          assignCardToSlot(txt);
-        };
-
-        pool.appendChild(card);
-      });
-      syncCardPoolState();
-    }
-
-    // 모바일 터치 드래그 지원 엔진
-    let touchGhostEl = null;
-    let draggingCardText = null;
-
-    function attachMobileTouchEvents(el, txt) {
-      let touchMoved = false;
-
-      el.addEventListener('touchstart', (e) => {
-        touchMoved = false;
-        draggingCardText = txt;
-        const touch = e.touches[0];
-
-        // Create Ghost Element
-        touchGhostEl = document.createElement('div');
-        touchGhostEl.className = 'fixed z-50 pointer-events-none px-3 py-2 rounded-xl bg-cyan-900/90 text-white font-bold text-xs border border-cyan-400 shadow-2xl opacity-90 -translate-x-1/2 -translate-y-1/2';
-        touchGhostEl.innerText = txt;
-        touchGhostEl.style.left = `${touch.clientX}px`;
-        touchGhostEl.style.top = `${touch.clientY}px`;
-        touchGhostEl.style.display = 'none';
-        document.body.appendChild(touchGhostEl);
-      }, { passive: true });
-
-      el.addEventListener('touchmove', (e) => {
-        touchMoved = true;
-        if (!touchGhostEl) return;
-        const touch = e.touches[0];
-        touchGhostEl.style.display = 'block';
-        touchGhostEl.style.left = `${touch.clientX}px`;
-        touchGhostEl.style.top = `${touch.clientY}px`;
-
-        // Highlight hovered slot
-        const elemUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-        const hoveredSlot = elemUnder ? elemUnder.closest('.quiz-slot') : null;
-        document.querySelectorAll('.quiz-slot').forEach(s => s.classList.remove('ring-2', 'ring-cyan-400'));
-        if (hoveredSlot) {
-          hoveredSlot.classList.add('ring-2', 'ring-cyan-400');
-        }
-      }, { passive: true });
-
-      el.addEventListener('touchend', (e) => {
-        document.querySelectorAll('.quiz-slot').forEach(s => s.classList.remove('ring-2', 'ring-cyan-400'));
-        if (touchGhostEl) {
-          touchGhostEl.remove();
-          touchGhostEl = null;
-        }
-
-        if (touchMoved) {
-          const touch = e.changedTouches[0];
-          const elemUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-          const dropSlot = elemUnder ? elemUnder.closest('.quiz-slot') : null;
-          if (dropSlot) {
-            const slotIdx = parseInt(dropSlot.id.replace('slot-', ''), 10);
-            if (!isNaN(slotIdx)) {
-              userSlotAnswers[slotIdx] = draggingCardText;
-              renderSlot(slotIdx, draggingCardText);
-              playTone(450 + slotIdx * 60, 'sine', 0.1);
-              syncCardPoolState();
-              if (!userSlotAnswers.includes(null)) {
-                setTimeout(() => checkChallengeAnswer(), 200);
-              }
-              return;
-            }
-          }
-        }
-      });
-    }
-
-    // 카드 풀 상태 동기화 (이미 사용된 카드는 회색/체크 표시)
-    function syncCardPoolState() {
-      const cards = document.querySelectorAll('#card-pool .quiz-card');
-      cards.forEach(c => {
-        const text = c.getAttribute('data-card-text');
-        const isUsed = userSlotAnswers.includes(text);
-        if (isUsed) {
-          c.classList.add('opacity-40', 'pointer-events-none', 'bg-slate-950', 'border-slate-800');
-          c.classList.remove('bg-slate-900', 'border-slate-700', 'hover:border-cyan-400');
-          if (!c.querySelector('.fa-check')) {
-            const check = document.createElement('i');
-            check.className = 'fa-solid fa-check text-cyan-400 text-[10px] ml-1';
-            c.appendChild(check);
-          }
+    /**
+     * 메인 프레임 시뮬레이션 계산
+     */
+    function updateSimulation(deltaHours = 0) {
+      const physics = computeSolarPhysics(STATE.time, STATE.weather, STATE.isBlocked, STATE.panelAngle);
+      
+      let ledBrightness = 0;   // 0.0 ~ 1.0
+      let ledStateText = '꺼짐 (소등)';
+      let ledLevelTag = '꺼짐';
+      let batteryFlow = '대기 중';
+
+      /* --- 1. 직결형 모형 동작 로직 --- */
+      if (STATE.mode === 'direct') {
+        DOM.batteryCard.classList.add('opacity-40');
+        DOM.batteryBoxSvg.setAttribute('stroke', '#475569');
+        DOM.batteryBoxLabel.textContent = '미사용';
+
+        // 빛이 있으면 낮에도 켜지고, 약하면 약하게, 밤/가림 시 꺼짐 (실제 키트 실험 결과 반영)
+        const genRatio = physics.generationPower / 50.0; // 0.0 ~ 1.0
+        
+        if (genRatio > 0.65) {
+          ledBrightness = 1.0;
+          ledLevelTag = '켜짐 (강함)';
+          ledStateText = '켜짐 (태양광 직결)';
+        } else if (genRatio > 0.15) {
+          ledBrightness = 0.45;
+          ledLevelTag = '약함';
+          ledStateText = '약하게 켜짐 (발전량 낮음)';
         } else {
-          c.classList.remove('opacity-40', 'pointer-events-none', 'bg-slate-950', 'border-slate-800');
-          c.classList.add('bg-slate-900', 'border-slate-700', 'hover:border-cyan-400');
-          const check = c.querySelector('.fa-check');
-          if (check) check.remove();
+          ledBrightness = 0.0;
+          ledLevelTag = '꺼짐';
+          ledStateText = '꺼짐 (빛 없음/가림)';
         }
-      });
-    }
+      } 
+      /* --- 2. 독립형 (배터리 + 충방전 제어기) 동작 로직 --- */
+      else {
+        DOM.batteryCard.classList.remove('opacity-40');
+        DOM.batteryBoxSvg.setAttribute('stroke', '#10b981');
+        DOM.batteryBoxLabel.textContent = '충전중';
 
-    // 스마트폰 탭 방식 카드 배치 로직
-    function assignCardToSlot(cardText) {
-      let targetIdx = -1;
-
-      // 만약 학생이 특정 슬롯을 먼저 탭해두었다면 해당 슬롯에 넣기
-      if (selectedSlotTarget !== null) {
-        targetIdx = selectedSlotTarget;
-        selectedSlotTarget = null;
-      } else {
-        // 아니면 첫 번째 빈 슬롯 찾기
-        targetIdx = userSlotAnswers.findIndex(ans => ans === null);
-      }
-
-      if (targetIdx !== -1) {
-        userSlotAnswers[targetIdx] = cardText;
-        renderSlot(targetIdx, cardText);
-        playTone(400 + targetIdx * 80, 'sine', 0.1);
-        syncCardPoolState();
-
-        // 4개 슬롯이 모두 채워지면 0.2초 후 자동 판정 및 완성 팝업 호출
-        if (!userSlotAnswers.includes(null)) {
-          setTimeout(() => checkChallengeAnswer(), 200);
-        }
-      } else {
-        showModal(
-          '모든 슬롯이 채워졌습니다',
-          '슬롯 카드를 터치하여 수정할 수 있습니다',
-          '이미 1~4단계가 모두 채워져 있습니다. 카드를 변경하려면 변경하고 싶은 슬롯을 터치하여 비운 뒤 새로운 카드를 선택하세요.'
-        );
-      }
-    }
-
-    // 모바일 슬롯 터치 핸들러
-    function handleSlotClick(idx) {
-      if (userSlotAnswers[idx]) {
-        // 이미 카드가 들어있으면 해당 카드를 슬롯에서 제거
-        removeSlot(idx);
-      } else {
-        // 비어있는 슬롯을 터치하면 '타겟 슬롯'으로 활성화 (하이라이트)
-        selectedSlotTarget = idx;
-        document.querySelectorAll('.quiz-slot').forEach((s, sIdx) => {
-          if (sIdx === idx) {
-            s.classList.add('border-cyan-400', 'ring-2', 'ring-cyan-400/50');
-          } else if (!userSlotAnswers[sIdx]) {
-            s.classList.remove('border-cyan-400', 'ring-2', 'ring-cyan-400/50');
+        // 낮: 충전지 충전 진행, LED는 조도 센서로 소등
+        if (physics.isDaytime && physics.generationPower > 1.0) {
+          // 충전 진행 (시뮬레이션 가중치 반영)
+          const chargeRate = (physics.generationPower / 50.0) * 15.0 * deltaHours; // 충전율
+          STATE.batteryCharge = Math.min(STATE.maxBattery, STATE.batteryCharge + chargeRate);
+          batteryFlow = `충전 중 (+${(physics.generationPower * 0.9).toFixed(1)}W)`;
+          
+          ledBrightness = 0.0;
+          ledLevelTag = '소등';
+          ledStateText = '소등 (낮 충전 모드)';
+          DOM.batteryBoxLabel.textContent = '충전중';
+        } 
+        // 밤 또는 어두울 때: 조도 감지 후 LED 점등 및 배터리 방전 소모
+        else {
+          DOM.batteryBoxLabel.textContent = '방전중';
+          const dischargeRate = 14.0 * deltaHours; // LED 구동 방전
+          
+          if (STATE.batteryCharge > 15.0) {
+            // 배터리 충분: 밝게 점등
+            STATE.batteryCharge = Math.max(0, STATE.batteryCharge - dischargeRate);
+            ledBrightness = 1.0;
+            ledLevelTag = '켜짐 (완전 점등)';
+            ledStateText = '점등 중 (배터리 방전)';
+            batteryFlow = '방전 중 (LED 구동)';
+          } else if (STATE.batteryCharge > 1.0) {
+            // 배터리 부족: 약하게 켜짐
+            STATE.batteryCharge = Math.max(0, STATE.batteryCharge - (dischargeRate * 0.4));
+            ledBrightness = 0.35;
+            ledLevelTag = '약함 (배터리 부족)';
+            ledStateText = '약하게 켜짐 (방전 임박)';
+            batteryFlow = '약한 방전 (저전력)';
+          } else {
+            // 완전 방전: 소등
+            STATE.batteryCharge = 0;
+            ledBrightness = 0.0;
+            ledLevelTag = '방전 꺼짐';
+            ledStateText = '소등 (배터리 완전 방전)';
+            batteryFlow = '방전 완료 (전력 고갈)';
           }
-        });
-        playTone(320, 'sine', 0.08);
+        }
       }
-    }
 
-    function renderSlot(idx, cardText) {
-      const slot = document.getElementById(`slot-${idx}`);
-      const content = slot.querySelector('.slot-content');
-      const footer = slot.querySelector('.slot-footer');
+      // 1. 천체 위치 계산 (화면상 원호 궤적)
+      renderSkyAndCelestials(STATE.time, physics.isDaytime);
 
-      slot.classList.remove('ring-2', 'ring-cyan-400/50');
+      // 2. 가로등 패널 회전각
+      DOM.solarPanelGroup.style.transform = `rotate(${STATE.panelAngle}deg)`;
 
-      if (cardText) {
-        slot.classList.remove('border-dashed', 'border-slate-700');
-        slot.classList.add('border-solid', 'border-cyan-400', 'bg-cyan-950/20');
-        content.innerHTML = `
-          <div class="text-xs sm:text-sm font-bold text-white bg-slate-900 p-2 sm:p-2.5 rounded-lg border border-cyan-500/50 flex items-center justify-between shadow-sm">
-            <span class="truncate pr-1">${cardText}</span>
-            <i class="fa-solid fa-xmark text-slate-400 hover:text-rose-400 text-xs shrink-0"></i>
-          </div>
-        `;
-        footer.classList.remove('hidden');
-        footer.innerText = '터치 시 취소';
+      // 3. 발전 발광 효과 및 광선
+      if (physics.generationPower > 5) {
+        DOM.panelGlowRect.setAttribute('opacity', (physics.generationPower / 50.0).toFixed(2));
+        DOM.sunRaysGraphic.setAttribute('opacity', (physics.generationPower / 50.0 * 0.7).toFixed(2));
       } else {
-        slot.classList.remove('border-solid', 'border-cyan-400', 'border-emerald-400', 'border-rose-400', 'bg-cyan-950/20');
-        slot.classList.add('border-dashed', 'border-slate-700');
-        content.innerHTML = `<span class="text-slate-500 text-[11px] sm:text-xs">터치 또는 드래그</span>`;
-        footer.classList.add('hidden');
-      }
-    }
-
-    function removeSlot(idx) {
-      userSlotAnswers[idx] = null;
-      renderSlot(idx, null);
-      selectedSlotTarget = null;
-      syncCardPoolState();
-      playTone(280, 'sine', 0.1);
-      document.getElementById('quiz-result-banner').classList.add('hidden');
-    }
-
-    function allowDrop(e) {
-      e.preventDefault();
-    }
-
-    function handleDrop(e, slotIdx) {
-      e.preventDefault();
-      const txt = e.dataTransfer ? e.dataTransfer.getData('text/plain') : null;
-      if (txt) {
-        userSlotAnswers[slotIdx] = txt;
-        renderSlot(slotIdx, txt);
-        syncCardPoolState();
-        playTone(490, 'sine', 0.1);
-
-        if (!userSlotAnswers.includes(null)) {
-          setTimeout(() => checkChallengeAnswer(), 200);
-        }
-      }
-    }
-
-    function resetCurrentChallenge() {
-      const type = document.getElementById('challenge-type-select').value;
-      loadChallenge(type);
-      playTone(300, 'sine', 0.15);
-    }
-
-    function checkChallengeAnswer() {
-      const type = document.getElementById('challenge-type-select').value;
-      const data = challengeData[type];
-      const correct = data.correct;
-
-      if (userSlotAnswers.includes(null)) {
-        showModal(
-          '미완성 슬롯 확인',
-          '다시 배치하세요',
-          '<div class="space-y-2"><p class="text-amber-300 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> 아직 비어 있는 단계가 있습니다.</p><p class="text-slate-300 text-xs leading-relaxed">초기 자연 에너지부터 최종 전기 형태까지 4개 단계를 모두 채운 후 정답을 검증할 수 있습니다. 카드를 선택해 빈 슬롯에 채워주세요.</p></div>',
-          'fa-solid fa-circle-exclamation text-amber-400'
-        );
-        return;
+        DOM.panelGlowRect.setAttribute('opacity', '0');
+        DOM.sunRaysGraphic.setAttribute('opacity', '0');
       }
 
-      let isAllCorrect = true;
-      const wrongSteps = [];
+      // 4. LED 램프 및 바닥 라이트 빔 렌더링
+      renderLightBeam(ledBrightness);
 
-      for (let i = 0; i < 4; i++) {
-        const slot = document.getElementById(`slot-${i}`);
-        if (userSlotAnswers[i] === correct[i]) {
-          slot.classList.remove('border-cyan-400', 'border-rose-500');
-          slot.classList.add('border-emerald-400');
-        } else {
-          slot.classList.remove('border-cyan-400', 'border-emerald-400');
-          slot.classList.add('border-rose-500');
-          isAllCorrect = false;
-          wrongSteps.push(`${i + 1}단계`);
-        }
-      }
+      // 5. 날씨 및 가림막 오버레이 갱신 (좌측 팝업 부드러운 전환)
+      DOM.weatherOverlay.style.opacity = (STATE.weather === 'cloudy') ? '1' : '0';
+      DOM.blockageOverlay.style.opacity = STATE.isBlocked ? '1' : '0';
+      DOM.blockageBox.style.transform = STATE.isBlocked ? 'scale(1) translateX(0)' : 'scale(0.95) translateX(-8px)';
 
-      const banner = document.getElementById('quiz-result-banner');
-      const icon = document.getElementById('quiz-result-icon');
-      const title = document.getElementById('quiz-result-title');
-      const desc = document.getElementById('quiz-result-desc');
-
-      banner.classList.remove('hidden');
-
-      if (isAllCorrect) {
-        banner.className = 'p-4 rounded-xl border border-emerald-500/80 bg-emerald-950/40 text-emerald-300 flex items-center justify-between';
-        icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 text-2xl"></i>';
-        title.innerText = '축하합니다! 완벽하게 에너지 변환 체계를 조립했습니다.';
-        desc.innerText = data.desc;
-
-        // 축하 효과음
-        playTone(523.25, 'triangle', 0.2);
-        setTimeout(() => playTone(659.25, 'triangle', 0.25), 150);
-        setTimeout(() => playTone(783.99, 'triangle', 0.35), 300);
-
-        const genNames = {
-          wind: '풍력 발전 (Wind Power)',
-          hydro: '수력 발전 (Hydroelectric)',
-          solar: '태양광 발전 (Solar Photovoltaic)',
-          thermal: '화력 발전 (Thermal Power)'
-        };
-        const curName = genNames[type] || '재생에너지 발전';
-
-        // 1~4단계 완성 전용 종합 팝업 템플릿
-        const completionHtml = `
-          <div class="space-y-4">
-            <div class="p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-700/80 text-emerald-200 text-xs space-y-1.5">
-              <div class="font-bold flex items-center gap-2 text-sm text-emerald-300">
-                <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i> 1단계부터 4단계까지 정확하게 완성되었습니다!
-              </div>
-              <p class="text-xs text-slate-300 leading-relaxed">${data.desc}</p>
-            </div>
-
-            <!-- Pipeline Visual Step Cards -->
-            <div class="space-y-1.5">
-              <span class="text-[11px] font-bold text-slate-400">조립 완성된 에너지 변환 체계:</span>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div class="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/60 text-center">
-                  <span class="text-[10px] text-slate-400 block font-semibold mb-1">1단계: 초기 에너지</span>
-                  <span class="text-xs font-bold text-cyan-300">${correct[0]}</span>
-                </div>
-                <div class="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/60 text-center">
-                  <span class="text-[10px] text-slate-400 block font-semibold mb-1">2단계: 중간 변환</span>
-                  <span class="text-xs font-bold text-blue-300">${correct[1]}</span>
-                </div>
-                <div class="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/60 text-center">
-                  <span class="text-[10px] text-slate-400 block font-semibold mb-1">3단계: 핵심 장치</span>
-                  <span class="text-xs font-bold text-amber-300">${correct[2]}</span>
-                </div>
-                <div class="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/60 text-center">
-                  <span class="text-[10px] text-slate-400 block font-semibold mb-1">4단계: 최종 형태</span>
-                  <span class="text-xs font-bold text-emerald-400">${correct[3]}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Next Challenge Guidance -->
-            <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between gap-3">
-              <span>다른 발전 방식의 변환 구조와 원리도 계속 탐구해보세요.</span>
-              <button onclick="goToNextChallenge('${type}')" class="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 font-bold text-xs text-white transition flex items-center gap-1.5 shrink-0">
-                <span>다음 발전 도전</span> <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-          </div>
-        `;
-
-        showModal(
-          `🎉 ${curName} 파이프라인 조립 완성!`,
-          '에너지 변환 4단계 구축 성공',
-          completionHtml,
-          'fa-solid fa-trophy text-amber-400'
-        );
-      } else {
-        banner.className = 'p-4 rounded-xl border border-rose-500/80 bg-rose-950/40 text-rose-300 flex items-center justify-between';
-        icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-400 text-2xl"></i>';
-        title.innerText = '일부 단계의 내용이 맞지 않습니다.';
-        desc.innerText = '빨간색으로 표시된 슬롯을 클릭하여 제거하고 올바른 순서로 다시 배치하세요.';
-        playTone(220, 'sawtooth', 0.3);
-
-        // 잘못 들어간 단계 안내 및 다시 배치 경고 팝업 호출
-        showModal(
-          '단계 구성 오류 경고',
-          '다시 배치하세요',
-          `<div class="space-y-3">
-            <div class="p-2.5 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 font-semibold text-xs flex items-center gap-2">
-              <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base"></i>
-              <span>[${wrongSteps.join(', ')}]에 잘못된 카드가 배치되었습니다.</span>
-            </div>
-            <p class="text-slate-300 text-xs leading-relaxed">
-              자연 에너지에서 시작하여 최종 전기가 만들어지는 4단계 순서를 다시 확인하세요.
-              <br><br>
-              <strong>빨간색 테두리로 표시된 슬롯의 카드를 클릭하여 제거한 후 올바른 카드로 다시 배치하세요.</strong>
-            </p>
-          </div>`,
-          'fa-solid fa-triangle-exclamation text-rose-400'
-        );
-      }
-    }
-
-    function goToNextChallenge(currentType) {
-      closeModal();
-      const types = ['wind', 'hydro', 'solar', 'thermal'];
-      const nextIdx = (types.indexOf(currentType) + 1) % types.length;
-      const nextType = types[nextIdx];
-      document.getElementById('challenge-type-select').value = nextType;
-      loadChallenge(nextType);
-      playTone(520, 'sine', 0.15);
-    }
-
-    /* =========================================================================
-       7. 19:00 Peak Hour Grid Crisis Simulation Game
-       ========================================================================= */
-    function startGridEmergency() {
-      const g = state.gridGame;
-      if (g.running) return;
-
-      g.running = true;
-      g.timer = 90.0;
-      g.allocated = 0;
-      g.sectors.forEach(s => s.on = false);
-      updateGridUI();
-
-      document.getElementById('grid-start-btn').classList.add('opacity-50', 'pointer-events-none');
-      playTone(880, 'sine', 0.3, 0.1);
-
-      g.timerInterval = setInterval(() => {
-        g.timer -= 0.1;
-        if (g.timer <= 0) {
-          g.timer = 0;
-          clearInterval(g.timerInterval);
-          g.running = false;
-          submitGridDecision(true);
-        }
-        document.getElementById('grid-timer').innerText = `${g.timer.toFixed(1)}초`;
-      }, 100);
-    }
-
-    function toggleSector(idx) {
-      const g = state.gridGame;
-      const sector = g.sectors[idx];
-
-      if (sector.on) {
-        // Turn OFF
-        sector.on = false;
-        g.allocated -= sector.req;
-        playTone(330, 'sine', 0.1);
-      } else {
-        // Check capacity (max 70%)
-        if (g.allocated + sector.req > 70) {
-          showModal('송전 용량 초과 경보 (블랙아웃 위험)', '현재 가용 공급량은 최대 70%입니다.', `해당 구역(${sector.name}, ${sector.req}%)을 송전하면 총 할당량이 ${g.allocated + sector.req}%가 되어 전체 송전망이 셧다운(Blackout)됩니다! 다른 구역의 전력을 차단하거나 우선순위를 재조정하세요.`);
-          playTone(200, 'sawtooth', 0.25);
-          return;
-        }
-        sector.on = true;
-        g.allocated += sector.req;
-        playTone(550, 'sine', 0.1);
-      }
-      updateGridUI();
-    }
-
-    function updateGridUI() {
-      const g = state.gridGame;
-      document.getElementById('grid-allocated-val').innerText = `${g.allocated} % / 70%`;
-      document.getElementById('grid-allocated-bar').style.width = `${(g.allocated / 70) * 100}%`;
-
-      g.sectors.forEach((sec, i) => {
-        const btn = document.getElementById(`sector-btn-${i}`);
-        if (sec.on) {
-          btn.className = 'w-full py-2 rounded-lg font-bold text-xs bg-emerald-500 text-white shadow-md shadow-emerald-500/30 transition flex items-center justify-center gap-1.5';
-          btn.innerHTML = `<i class="fa-solid fa-bolt"></i> <span>송전 ON (${sec.req}%)</span>`;
-        } else {
-          btn.className = 'w-full py-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center gap-1.5';
-          btn.innerHTML = `<i class="fa-solid fa-power-off"></i> <span>송전 OFF</span>`;
-        }
+      // 6. 텍스트 및 게이지 수치 갱신
+      renderTelemetry({
+        physics,
+        ledBrightness,
+        ledLevelTag,
+        ledStateText,
+        batteryFlow
       });
+
+      // 7. 교육 미션 달성 체크
+      checkMissionAchievements(physics, ledBrightness);
     }
 
-    function submitGridDecision(isTimeOver = false) {
-      const g = state.gridGame;
-      if (g.timerInterval) clearInterval(g.timerInterval);
-      g.running = false;
-      document.getElementById('grid-start-btn').classList.remove('opacity-50', 'pointer-events-none');
+    function renderSkyAndCelestials(time, isDaytime) {
+      // 시간 표기 (06:00 ~ 24:00 ~ 06:00)
+      const hours = Math.floor(time % 24);
+      const minutes = Math.floor((time % 1) * 60);
+      const clockStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      DOM.digitalClock.textContent = clockStr;
 
-      const hosp = g.sectors[0].on;
-      const dataCenter = g.sectors[1].on;
-      const school = g.sectors[2].on;
-      const factory = g.sectors[3].on;
-
-      let score = 0;
-      let reviewHtml = '';
-
-      if (hosp) {
-        score += 35;
-        reviewHtml += `<div class="p-2 rounded bg-emerald-950/50 border border-emerald-800 text-emerald-300">✔ <strong>종합병원 송전 성공</strong>: 중환자실 및 응급 수술실의 생명 유지 시스템이 안전하게 유지되었습니다.</div>`;
+      // 시간대 배지
+      if (time >= 6 && time < 9) {
+        DOM.dayNightBadge.textContent = '아침 (일출)';
+        DOM.dayNightBadge.className = 'ml-1 px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300';
+      } else if (time >= 9 && time < 17) {
+        DOM.dayNightBadge.textContent = '낮 (일조 풍부)';
+        DOM.dayNightBadge.className = 'ml-1 px-1.5 py-0.5 rounded text-[10px] bg-yellow-500/20 text-yellow-300';
+      } else if (time >= 17 && time < 19.5) {
+        DOM.dayNightBadge.textContent = '저녁 (일몰/황혼)';
+        DOM.dayNightBadge.className = 'ml-1 px-1.5 py-0.5 rounded text-[10px] bg-orange-500/20 text-orange-300';
       } else {
-        reviewHtml += `<div class="p-2 rounded bg-rose-950/50 border border-rose-800 text-rose-300">✖ <strong>종합병원 송전 차단</strong>: 비상발전기(40분) 한계에 도달하면 즉각적인 인명 피해 위험이 발생합니다. 최우선권 고려가 필수적입니다.</div>`;
+        DOM.dayNightBadge.textContent = '밤 (야간)';
+        DOM.dayNightBadge.className = 'ml-1 px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300';
       }
 
-      if (dataCenter) {
-        score += 30;
-        reviewHtml += `<div class="p-2 rounded bg-blue-950/50 border border-blue-800 text-blue-300">✔ <strong>데이터센터 송전 성공</strong>: 119 긴급 통신망과 결제 인프라가 생존하여 도시 마비 2차 패닉을 방어했습니다.</div>`;
-      } else {
-        reviewHtml += `<div class="p-2 rounded bg-amber-950/50 border border-amber-800 text-amber-300">▲ <strong>데이터센터 차단</strong>: 스마트폰 먹통 및 긴급 신고 두절로 혼란이 가중되었습니다.</div>`;
-      }
+      // 하늘 배경 그라데이션 동적 보간
+      if (time >= 6 && time <= 18) {
+        // 낮: 해가 뜸
+        const dayProg = (time - 6) / 12; // 0 ~ 1
+        const sunX = 10 + dayProg * 80;  // 10% ~ 90%
+        const sunY = 90 - Math.sin(Math.PI * dayProg) * 75; // 포물선 궤적 (90% -> 15% -> 90%)
+        
+        DOM.sunEntity.style.left = `${sunX}%`;
+        DOM.sunEntity.style.top = `${sunY}%`;
+        DOM.sunEntity.style.opacity = '1';
+        DOM.moonEntity.style.opacity = '0';
 
-      if (school) {
-        score += 15;
-        reviewHtml += `<div class="p-2 rounded bg-emerald-950/50 border border-emerald-800 text-emerald-300">✔ <strong>학교/대피소 송전 성공</strong>: 1,200명 대피 노약자의 온열질환 피해를 예방했습니다.</div>`;
-      } else {
-        reviewHtml += `<div class="p-2 rounded bg-slate-900 border border-slate-800 text-slate-400">▲ <strong>학교/대피소 차단</strong>: 비상 조명만 켜진 채 대피자들이 무더위 속에 대기했습니다.</div>`;
-      }
+        // 태양 광선 시작점 연결
+        const containerRect = DOM.skyContainer.getBoundingClientRect();
+        const svgSunX = (sunX / 100) * 600;
+        const svgSunY = (sunY / 100) * 400;
+        DOM.ray1.setAttribute('x1', svgSunX);
+        DOM.ray1.setAttribute('y1', svgSunY);
+        DOM.ray2.setAttribute('x1', svgSunX);
+        DOM.ray2.setAttribute('y1', svgSunY);
+        DOM.ray3.setAttribute('x1', svgSunX);
+        DOM.ray3.setAttribute('y1', svgSunY);
 
-      if (factory) {
-        score += 20;
-        reviewHtml += `<div class="p-2 rounded bg-blue-950/50 border border-blue-800 text-blue-300">✔ <strong>반도체 공장 송전 성공</strong>: 수천억 원의 용광로 굳음 경제적 피해를 방어했습니다.</div>`;
+        if (dayProg < 0.2 || dayProg > 0.8) {
+          // 노을 / 일출
+          DOM.skyContainer.className = "relative w-full h-[250px] xs:h-[280px] sm:h-[340px] md:h-[390px] lg:h-[410px] rounded-xl sm:rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl transition-all duration-700 bg-gradient-to-b from-amber-600 via-orange-400 to-yellow-200";
+        } else {
+          // 맑은 파란 낮
+          DOM.skyContainer.className = "relative w-full h-[250px] xs:h-[280px] sm:h-[340px] md:h-[390px] lg:h-[410px] rounded-xl sm:rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl transition-all duration-700 bg-gradient-to-b from-sky-500 via-sky-300 to-blue-100";
+        }
       } else {
-        reviewHtml += `<div class="p-2 rounded bg-slate-900 border border-slate-800 text-slate-400">▲ <strong>공장 가동 중단</strong>: 대규모 경제 손실이 발생했으나 시민의 생명과 통신을 우선했습니다.</div>`;
-      }
+        // 밤: 달이 뜸
+        const nightProg = (time > 18) ? (time - 18) / 12 : (time + 6) / 12; // 0 ~ 1
+        const moonX = 10 + nightProg * 80;
+        const moonY = 85 - Math.sin(Math.PI * nightProg) * 65;
+        
+        DOM.moonEntity.style.left = `${moonX}%`;
+        DOM.moonEntity.style.top = `${moonY}%`;
+        DOM.moonEntity.style.opacity = '1';
+        DOM.sunEntity.style.opacity = '0';
 
-      const totalHtml = `
-        <div class="space-y-3">
-          <div class="text-sm font-semibold text-slate-200">
-            총 할당 전력: <strong>${g.allocated}%</strong> / 70% | 관제 효율 점수: <strong class="text-cyan-400">${score}점</strong>
-          </div>
-          <div class="space-y-2 text-xs">
-            ${reviewHtml}
-          </div>
-          <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-[11px] text-slate-400">
-            <strong>💡 교과 연계 통찰</strong>: "데이터는 사실을 더 선명하게 보여줄 뿐, 무엇을 우선할지는 기계가 대신 결정하지 않는다." 재생에너지의 간헐성 문제는 단순한 발전 기술을 넘어 <strong>윤리적 의사결정과 지능형 전력망(Smart Grid)</strong>의 중요성을 일깨웁니다.
-          </div>
+        // 칠흑 같은 밤하늘 그라데이션
+        DOM.skyContainer.className = "relative w-full h-[250px] xs:h-[280px] sm:h-[340px] md:h-[390px] lg:h-[410px] rounded-xl sm:rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl transition-all duration-700 bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900";
+      }
+    }
+
+    function renderLightBeam(brightness) {
+      if (brightness > 0.05) {
+        DOM.lightBeam.setAttribute('opacity', (brightness * 0.85).toFixed(2));
+        DOM.ledBulb.setAttribute('fill', '#fef08a');
+        DOM.ledBulb.setAttribute('filter', 'drop-shadow(0 0 10px #fef08a)');
+        
+        DOM.ledStatusDot.className = 'w-3 h-3 rounded-full bg-yellow-400 animate-ping';
+      } else {
+        DOM.lightBeam.setAttribute('opacity', '0');
+        DOM.ledBulb.setAttribute('fill', '#475569');
+        DOM.ledBulb.removeAttribute('filter');
+        
+        DOM.ledStatusDot.className = 'w-3 h-3 rounded-full bg-slate-600';
+      }
+    }
+
+    function renderTelemetry({ physics, ledBrightness, ledLevelTag, ledStateText, batteryFlow }) {
+      // 1. 발전량
+      const powerW = physics.generationPower;
+      const powerPct = Math.round((powerW / 50.0) * 100);
+      DOM.powerWatt.textContent = powerW.toFixed(1);
+      DOM.powerPercent.textContent = `${powerPct}%`;
+      DOM.powerBar.style.width = `${powerPct}%`;
+
+      // 2. LED 밝기
+      const brightPct = Math.round(ledBrightness * 100);
+      DOM.ledBrightPercent.textContent = `${brightPct}%`;
+      DOM.ledBrightBar.style.width = `${brightPct}%`;
+      DOM.ledLevelDesc.textContent = ledLevelTag;
+      DOM.ledStatusText.textContent = ledStateText;
+
+      // 3. 배터리 (독립형)
+      const batPct = Math.round(STATE.batteryCharge);
+      DOM.batteryPercent.textContent = `${batPct}%`;
+      DOM.batteryBar.style.width = `${batPct}%`;
+      DOM.batteryCapText.textContent = `${batPct} / 100 Wh`;
+      DOM.batteryFlowState.textContent = batteryFlow;
+
+      // 배터리 잔량 색상 피드백
+      if (batPct < 20) {
+        DOM.batteryBar.className = 'h-full bg-red-500 rounded-full transition-all duration-200';
+        DOM.batteryPercent.className = 'font-bold font-mono text-red-400';
+      } else if (batPct < 50) {
+        DOM.batteryBar.className = 'h-full bg-amber-500 rounded-full transition-all duration-200';
+        DOM.batteryPercent.className = 'font-bold font-mono text-amber-400';
+      } else {
+        DOM.batteryBar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-200';
+        DOM.batteryPercent.className = 'font-bold font-mono text-emerald-400';
+      }
+    }
+
+    function showToast(title, message, isSuccess = true) {
+      const toast = document.createElement('div');
+      toast.className = `p-3.5 rounded-xl border shadow-xl flex items-center space-x-3 transition-all duration-300 pointer-events-auto transform translate-y-2 opacity-0 ${
+        isSuccess ? 'bg-slate-900 border-emerald-500/50 text-emerald-300' : 'bg-slate-900 border-indigo-500/50 text-indigo-300'
+      }`;
+      toast.innerHTML = `
+        <div class="text-xl">${isSuccess ? '🎉' : '💡'}</div>
+        <div>
+          <div class="text-xs font-bold text-white">${title}</div>
+          <div class="text-[11px] text-slate-300">${message}</div>
         </div>
       `;
+      DOM.toastBox.appendChild(toast);
+      
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
 
-      showModal(
-        isTimeOver ? '⏰ 제한시간 종료! 비상 관제 결과' : '도시 관제 결정 보고서',
-        '시스템 엔지니어링 & 윤리적 우선순위 평가',
-        totalHtml,
-        score >= 60 ? 'fa-solid fa-award text-emerald-400' : 'fa-solid fa-triangle-exclamation text-amber-400'
-      );
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4200);
     }
 
-    /* =========================================================================
-       8. Reflection & Seteuk Generator (학생부 세특)
-       ========================================================================= */
-    function autoFillRecordExample() {
-      document.getElementById('record-step1').value = '전기는 단순히 콘센트에서 흘러나오는 에너지고, 친환경 재생에너지를 많이 설치하기만 하면 미래 문제가 다 해결될 것이라고 생각했다.';
-      document.getElementById('record-step2').value = '발전 원리(전자기유도 vs 광전효과)를 직접 조작해보고, 19:00 피크 시간대 시뮬레이션을 통해 자연 에너지가 인간의 시간표와 일치하지 않는다는 간헐성 한계와 센서 기반 전력망 제어의 필연성을 분석했다.';
-      document.getElementById('record-step3').value = '전기공학의 핵심은 에너지를 단순히 많이 만드는 기술이 아니라, 필요한 순간에 맞추어 정보를 읽고(측정) 판단하여 배분하는(제어) 시스템 사고에 있음을 깨달았다.';
-      playTone(440, 'sine', 0.1);
-    }
-
-    function generateSeteukText() {
-      const s1 = document.getElementById('record-step1').value.trim();
-      const s2 = document.getElementById('record-step2').value.trim();
-      const s3 = document.getElementById('record-step3').value.trim();
-
-      if (!s1 || !s2 || !s3) {
-        showModal('작성 확인', '3단계를 모두 입력해주세요', '처음 생각, 결정적 근거, 지금의 통찰 3가지를 모두 채워야 입학사정관 및 세특 제출용 문안이 완성됩니다.');
-        return;
+    function checkMissionAchievements(physics, ledBrightness) {
+      // 미션 1: 직결형으로 하루 돌려보기 (낮에 켜지고 -> 밤에 꺼지는 것 확인)
+      if (STATE.mode === 'direct' && !STATE.missions.m1_directDayCompleted) {
+        if (physics.isDaytime && ledBrightness > 0.5) {
+          STATE.missions.m1_daySeen = true;
+        }
+        if (!physics.isDaytime && ledBrightness === 0 && STATE.missions.m1_daySeen) {
+          STATE.missions.m1_directDayCompleted = true;
+          markMissionSuccess(1, "미션 ① 직결형 탐구 완료", "낮에는 켜지고 밤에는 꺼지는 직결형 회로의 한계를 확인했습니다!");
+        }
       }
 
-      const combined = `[전기전자·에너지 변환 탐구] '전기는 자연의 힘인가, 인간의 발명인가'라는 질문에서 출발하여 물리 법칙과 전력망 제어 시스템을 융합 탐구함. 풍력·수력의 전자기 유도 원리와 태양광의 반도체 광전효과 변환 구조를 비교 분석하고, 19시 도시 전력 피크 상황의 간헐성 딜레마를 분석하여 발전의 난제가 단순 생산량이 아닌 실시간 수요·공급 맞춤 제어에 있음을 도출함. 데이터를 기반으로 필수 인프라 우선순위를 판별하는 폐루프 제어와 스마트 그리드의 필요성을 논리적으로 설명하며 공학적 시스템 사고와 기술 윤리적 관점을 균형 있게 확장함.`;
-
-      document.getElementById('seteuk-output-text').innerText = combined;
-      document.getElementById('seteuk-output-box').classList.remove('hidden');
-      playTone(600, 'triangle', 0.2);
-    }
-
-    function copyGeneratedSeteuk() {
-      const text = document.getElementById('seteuk-output-text').innerText;
-      copyToClipboardFallback(text, '학생부 세특 문안이 클립보드에 복사되었습니다.');
-    }
-
-    function copyTableText() {
-      const summary = `[재생에너지 및 화력 발전 변환 비교 정리표]
-1. 풍력 발전: 바람 (운동에너지) ➔ 날개 블레이드 회전 ➔ 풍력 터빈 & 발전기 ➔ 전기 (전자기 유도)
-2. 수력 발전: 물 (위치·운동에너지) ➔ 수차 회전운동 ➔ 수차 & 발전기 ➔ 전기 (유도 기전력)
-3. 태양광 발전: 빛 (광에너지) ➔ 광전효과 (전자 이동) ➔ 태양전지 (반도체 패널) ➔ 전기 (비회전 직류 생성)
-4. 화력 발전: 연료 (화학에너지) ➔ 연소 열 ➔ 증기 회전 ➔ 증기 터빈 & 발전기 ➔ 전기 (대용량/CO2 배출)`;
-
-      copyToClipboardFallback(summary, '정리표 텍스트가 클립보드에 복사되었습니다.');
-    }
-
-    function copyToClipboardFallback(text, successMsg) {
-      const tempInput = document.createElement('textarea');
-      tempInput.value = text;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      try {
-        document.execCommand('copy');
-        showModal('복사 완료', '클립보드 저장 성공', successMsg, 'fa-regular fa-clipboard text-cyan-400');
-        playTone(660, 'sine', 0.15);
-      } catch (err) {
-        showModal('복사 실패', '브라우저 권한 안내', '직접 텍스트를 선택하여 복사해 주세요.');
+      // 미션 2: 독립형으로 바꿔 다시 돌려보기 (낮에 충전 -> 밤에 LED 점등 확인)
+      if (STATE.mode === 'standalone' && !STATE.missions.m2_standaloneDayCompleted) {
+        if (physics.isDaytime && physics.generationPower > 10) {
+          STATE.missions.m2_chargeSeen = true;
+        }
+        if (!physics.isDaytime && ledBrightness > 0.5 && STATE.missions.m2_chargeSeen) {
+          STATE.missions.m2_standaloneDayCompleted = true;
+          markMissionSuccess(2, "미션 ② 독립형 탐구 완료", "낮에 저장한 배터리로 해가 진 밤에만 점등되는 독립형 제어를 확인했습니다!");
+        }
       }
-      document.body.removeChild(tempInput);
+
+      // 미션 3: 흐린 날을 넣어 밤에 어떻게 되는지 보기
+      if (STATE.mode === 'standalone' && STATE.weather === 'cloudy' && !STATE.missions.m3_cloudyNightDepleted) {
+        if (physics.isDaytime) {
+          STATE.missions.m3_cloudyDaySeen = true;
+        }
+        if (!physics.isDaytime && STATE.missions.m3_cloudyDaySeen) {
+          if (STATE.batteryCharge <= 10.0 || ledBrightness < 0.5) {
+            STATE.missions.m3_cloudyNightDepleted = true;
+            markMissionSuccess(3, "미션 ③ 흐린 날 밤 탐구 완료", "흐린 날의 발전량 부족으로 밤에 배터리가 일찍 방전되어 꺼지는 현상을 발견했습니다!");
+          }
+        }
+      }
+
+      updateMissionBadge();
     }
 
-    /* =========================================================================
-       9. Window Onload Initialization
-       ========================================================================= */
-    window.onload = function () {
-      resizeCanvas();
-      updateSimUI();
-      renderSimulation();
-      loadChallenge('wind');
-    };
+    function markMissionSuccess(num, title, desc) {
+      showToast(title, desc, true);
+      const card = document.getElementById(`missionCard${num}`);
+      const status = document.getElementById(`missionStatus${num}`);
+      const badge = document.getElementById(`missionBadge${num}`);
+      
+      if (card && status && badge) {
+        card.classList.remove('bg-slate-950/80', 'border-slate-800');
+        card.classList.add('bg-emerald-950/30', 'border-emerald-500/50');
+        status.textContent = '달성 완료 ✓';
+        status.className = 'text-[11px] font-bold text-emerald-400';
+        badge.className = 'w-6 h-6 rounded-full bg-emerald-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 mt-0.5';
+        badge.textContent = '✓';
+      }
+    }
+
+    function updateMissionBadge() {
+      const count = [
+        STATE.missions.m1_directDayCompleted,
+        STATE.missions.m2_standaloneDayCompleted,
+        STATE.missions.m3_cloudyNightDepleted
+      ].filter(Boolean).length;
+
+      DOM.missionProgressBadge.textContent = `${count}/3 달성`;
+      if (count === 3) {
+        DOM.missionProgressBadge.className = 'bg-emerald-500 text-slate-950 text-xs px-2 py-0.5 rounded-full font-black';
+      }
+    }
+
+    // 모드 전환
+    function setMode(mode) {
+      STATE.mode = mode;
+      if (mode === 'direct') {
+        DOM.modeDirectBtn.className = 'py-2 sm:py-2.5 px-2 rounded-lg font-semibold text-xs transition flex flex-col items-center gap-0.5 sm:gap-1 bg-blue-600 text-white shadow-md active:scale-95';
+        DOM.modeStandaloneBtn.className = 'py-2 sm:py-2.5 px-2 rounded-lg font-semibold text-xs transition flex flex-col items-center gap-0.5 sm:gap-1 text-slate-400 hover:text-white active:scale-95';
+        DOM.currentModeLabel.textContent = '직결형 (우리 모형)';
+        DOM.currentModeLabel.className = 'font-bold text-blue-400';
+        
+        DOM.principleTitle.textContent = '직결형 동작 원리 (키트 모형)';
+        DOM.principleDesc.textContent = '태양광 패널에 LED를 직결했습니다. 빛이 있으면 낮에도 켜지고, 구름이 끼거나 가리면 바로 어두워지거나 꺼집니다. 실제 키트 시험 결과와 일치합니다.';
+      } else {
+        DOM.modeStandaloneBtn.className = 'py-2 sm:py-2.5 px-2 rounded-lg font-semibold text-xs transition flex flex-col items-center gap-0.5 sm:gap-1 bg-emerald-600 text-white shadow-md active:scale-95';
+        DOM.modeDirectBtn.className = 'py-2 sm:py-2.5 px-2 rounded-lg font-semibold text-xs transition flex flex-col items-center gap-0.5 sm:gap-1 text-slate-400 hover:text-white active:scale-95';
+        DOM.currentModeLabel.textContent = '독립형 (충전지+제어기)';
+        DOM.currentModeLabel.className = 'font-bold text-emerald-400';
+
+        DOM.principleTitle.textContent = '독립형 동작 원리 (실제 도로 가로등)';
+        DOM.principleDesc.textContent = '낮에는 패널 전력으로 충전지를 충전하고 LED는 소등합니다. 밤이 되어 어두워지면 충전된 배터리로 LED를 환하게 켭니다. 흐린 날 뒤에는 충전량이 적어 밤에 일찍 소등될 수 있습니다.';
+      }
+      updateSimulation(0);
+    }
+
+    DOM.modeDirectBtn.addEventListener('click', () => setMode('direct'));
+    DOM.modeStandaloneBtn.addEventListener('click', () => setMode('standalone'));
+
+    // 시간 슬라이더
+    DOM.timeSlider.addEventListener('input', (e) => {
+      const prevTime = STATE.time;
+      STATE.time = parseFloat(e.target.value);
+      const delta = Math.max(0, STATE.time - prevTime);
+      updateSimulation(delta);
+    });
+
+    // 퀵 타임 점프 버튼
+    document.querySelectorAll('.time-quick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = parseFloat(btn.dataset.time);
+        STATE.time = target;
+        DOM.timeSlider.value = target;
+        updateSimulation(0.5);
+      });
+    });
+
+    // 재생 / 일시정지 루프
+    function togglePlayback() {
+      STATE.isPlaying = !STATE.isPlaying;
+      if (STATE.isPlaying) {
+        DOM.playIcon.textContent = '⏸';
+        DOM.playText.textContent = '정지';
+        DOM.playPauseBtn.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold flex items-center gap-1 transition active:scale-95';
+        STATE.lastTimestamp = performance.now();
+        STATE.animFrameId = requestAnimationFrame(animationLoop);
+      } else {
+        DOM.playIcon.textContent = '▶';
+        DOM.playText.textContent = '재생';
+        DOM.playPauseBtn.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1 transition active:scale-95';
+        if (STATE.animFrameId) {
+          cancelAnimationFrame(STATE.animFrameId);
+        }
+      }
+    }
+
+    function animationLoop(timestamp) {
+      if (!STATE.isPlaying) return;
+      const elapsedSec = (timestamp - STATE.lastTimestamp) / 1000;
+      STATE.lastTimestamp = timestamp;
+
+      // 1초당 가상 시간 1.4시간 진행 * 배속
+      const deltaHours = elapsedSec * 1.4 * STATE.playbackSpeed;
+      STATE.time += deltaHours;
+
+      if (STATE.time > 30.0) {
+        STATE.time = 6.0; // 다음 날 아침 6시로 24시간 사이클 루프
+      }
+
+      DOM.timeSlider.value = STATE.time;
+      updateSimulation(deltaHours);
+
+      STATE.animFrameId = requestAnimationFrame(animationLoop);
+    }
+
+    DOM.playPauseBtn.addEventListener('click', togglePlayback);
+
+    // 배속 조절 (1x -> 2x -> 4x)
+    DOM.speedBtn.addEventListener('click', () => {
+      if (STATE.playbackSpeed === 1.0) {
+        STATE.playbackSpeed = 2.0;
+        DOM.speedBtn.textContent = '2x';
+      } else if (STATE.playbackSpeed === 2.0) {
+        STATE.playbackSpeed = 4.0;
+        DOM.speedBtn.textContent = '4x';
+      } else {
+        STATE.playbackSpeed = 1.0;
+        DOM.speedBtn.textContent = '1x';
+      }
+    });
+
+    // 날씨 토글
+    DOM.weatherClearBtn.addEventListener('click', () => {
+      STATE.weather = 'clear';
+      DOM.weatherClearBtn.className = 'px-2.5 sm:px-3 py-1 rounded-md text-xs font-bold transition bg-amber-500 text-slate-950 active:scale-95';
+      DOM.weatherCloudyBtn.className = 'px-2.5 sm:px-3 py-1 rounded-md text-xs font-medium text-slate-400 hover:text-white transition active:scale-95';
+      updateSimulation(0);
+    });
+
+    DOM.weatherCloudyBtn.addEventListener('click', () => {
+      STATE.weather = 'cloudy';
+      DOM.weatherCloudyBtn.className = 'px-2.5 sm:px-3 py-1 rounded-md text-xs font-bold transition bg-slate-700 text-white active:scale-95';
+      DOM.weatherClearBtn.className = 'px-2.5 sm:px-3 py-1 rounded-md text-xs font-medium text-slate-400 hover:text-white transition active:scale-95';
+      updateSimulation(0);
+    });
+
+    // 패널 가림 토글 (왼쪽으로 이동된 안내창 표시)
+    DOM.blockageToggleBtn.addEventListener('click', () => {
+      STATE.isBlocked = !STATE.isBlocked;
+      if (STATE.isBlocked) {
+        DOM.blockageToggleBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition border border-amber-500 bg-amber-500/20 text-amber-300 shrink-0 active:scale-95';
+        DOM.blockageToggleBtn.textContent = '✋ 가리는 중 (100% 차단)';
+      } else {
+        DOM.blockageToggleBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 active:scale-95';
+        DOM.blockageToggleBtn.textContent = '가림 해제됨';
+      }
+      updateSimulation(0);
+    });
+
+    // 각도 슬라이더
+    DOM.angleSlider.addEventListener('input', (e) => {
+      STATE.panelAngle = parseInt(e.target.value, 10);
+      let dirText = '0° (수평)';
+      if (STATE.panelAngle < 0) dirText = `${Math.abs(STATE.panelAngle)}° 동향`;
+      if (STATE.panelAngle > 0) dirText = `${STATE.panelAngle}° 서향`;
+      DOM.angleValueLabel.textContent = dirText;
+      updateSimulation(0);
+    });
+
+    // 초기화
+    DOM.resetSimBtn.addEventListener('click', () => {
+      if (STATE.isPlaying) togglePlayback();
+      STATE.time = 12.0;
+      STATE.panelAngle = 0;
+      STATE.isBlocked = false;
+      STATE.weather = 'clear';
+      STATE.batteryCharge = 60.0;
+      DOM.timeSlider.value = 12.0;
+      DOM.angleSlider.value = 0;
+      DOM.angleValueLabel.textContent = '0° (수평)';
+      
+      DOM.weatherClearBtn.click();
+      if (STATE.isBlocked) DOM.blockageToggleBtn.click();
+      
+      setMode('direct');
+      updateSimulation(0);
+      showToast('초기화 완료', '모든 실험 변수가 정오(12:00) 맑은 날씨로 리셋되었습니다.', false);
+    });
+
+    // 미션 모달 핸들링
+    DOM.missionToggleBtn.addEventListener('click', () => DOM.missionModal.classList.remove('hidden'));
+    DOM.closeMissionBtn.addEventListener('click', () => DOM.missionModal.classList.add('hidden'));
+    DOM.confirmMissionBtn.addEventListener('click', () => DOM.missionModal.classList.add('hidden'));
+
+    window.addEventListener('load', () => {
+      setMode('direct');
+      updateSimulation(0);
+      setTimeout(() => {
+        showToast('실험실 준비 완료', '상단 [탐구 미션] 버튼을 눌러 슬라이드 퀘스트를 확인하세요!', false);
+      }, 700);
+    });
   </script>
 </body>
 </html>
